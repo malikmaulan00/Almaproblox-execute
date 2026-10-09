@@ -1,2595 +1,1573 @@
 --[[
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                    ✦ ETERNITY PREMIUM ULTIMATE v7 ✦                    ║
-║          230+ FEATURES • ALL BUG FIXED • ALL EXECUTOR                  ║
-║      🗺️ COPY MAP • 🎵 SOUND ID • 🌾 AUTO FARM • 🎣 FISH IT           ║
-╚═══════════════════════════════════════════════════════════════════════════╝
+    ██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗ 
+    ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+    ███████║███████║██║     █████╔╝ █████╗  ██████╔╝
+    ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
+    ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
+    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+           MAP COPIER PRO MAX v3.1
+        + STREAMING BYPASS INTEGRATED
 ]]
 
+-- ============================================
+-- CONFIG GLOBAL
+-- ============================================
+local CONFIG = {
+    ThemeColor = Color3.fromRGB(0, 255, 170),
+    AccentColor = Color3.fromRGB(0, 200, 255),
+    DangerColor = Color3.fromRGB(255, 60, 60),
+    WarnColor = Color3.fromRGB(255, 200, 0),
+    BgColor = Color3.fromRGB(8, 8, 12),
+    PanelColor = Color3.fromRGB(15, 15, 20),
+    TextColor = Color3.fromRGB(0, 255, 170),
+    Font = Enum.Font.Code,
+    SaveFolder = "HackerMapCopies",
+    ConfigFile = "HackerMapCopies/config.json",
+    LoadingDuration = 3.5,
+    AntiDetection = true,
+    AntiStreaming = true,
+    StreamRadius = 1500,
+    StreamGridStep = 500,
+    StreamWaitTime = 1.2,
+    StreamMaxPoints = 25,
+    PreloadWait = 3,
+    BatchSize = 100,
+    MaxDepth = 8,
+    LogToFile = true,
+}
+
+-- ============================================
+-- SERVICE
+-- ============================================
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
-local Workspace = game:GetService("Workspace")
-local CoreGui = game:GetService("CoreGui")
-local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local Stats = game:GetService("Stats")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
-local SoundService = game:GetService("SoundService")
-local GuiService = game:GetService("GuiService")
-local CollectionService = game:GetService("CollectionService")
-local MarketplaceService = game:GetService("MarketplaceService")
-local LP = Players.LocalPlayer
-local Cam = Workspace.CurrentCamera
-local Mouse = LP:GetMouse()
+local LocalPlayer = Players.LocalPlayer
 
--- ═══════════════════════════════════════════════════════════════════════════
--- 🎨 PREMIUM THEME
--- ═══════════════════════════════════════════════════════════════════════════
-
-local T = {
-    Bg = Color3.fromRGB(18, 14, 30),
-    Bg2 = Color3.fromRGB(28, 22, 45),
-    Panel = Color3.fromRGB(35, 28, 55),
-    Elem = Color3.fromRGB(45, 38, 70),
-    ElemHover = Color3.fromRGB(60, 50, 90),
-    Gold = Color3.fromRGB(255, 215, 0),
-    GoldD = Color3.fromRGB(200, 170, 0),
-    GoldL = Color3.fromRGB(255, 235, 150),
-    Purple = Color3.fromRGB(160, 100, 255),
-    PurpleL = Color3.fromRGB(200, 160, 255),
-    PurpleD = Color3.fromRGB(100, 60, 200),
-    Pink = Color3.fromRGB(255, 105, 180),
-    White = Color3.fromRGB(255, 255, 255),
-    Text = Color3.fromRGB(220, 210, 240),
-    TextDim = Color3.fromRGB(160, 150, 180),
-    TextGold = Color3.fromRGB(255, 215, 0),
-    On = Color3.fromRGB(80, 220, 100),
-    Off = Color3.fromRGB(80, 70, 100),
-    Close = Color3.fromRGB(255, 80, 80),
-    Border = Color3.fromRGB(255, 215, 0),
-    Shadow = Color3.fromRGB(0, 0, 0),
-    Glow = Color3.fromRGB(160, 100, 255),
-    Progress = Color3.fromRGB(255, 215, 0),
-    ProgressBg = Color3.fromRGB(40, 35, 60),
-    Emerald = Color3.fromRGB(80, 220, 100),
-    Cyan = Color3.fromRGB(80, 200, 255),
+-- ============================================
+-- EXECUTOR DETECTION
+-- ============================================
+local API = {
+    writefile = type(writefile) == "function",
+    readfile = type(readfile) == "function",
+    makefolder = type(makefolder) == "function",
+    isfile = type(isfile) == "function",
+    isfolder = type(isfolder) == "function",
+    listfiles = type(listfiles) == "function",
+    delfile = type(delfile) == "function",
+    loadstring = type(loadstring) == "function" or type(load) == "function",
+    httpget = type(game.HttpGet) == "function" or type(httpget) == "function",
+    identify = type(identifyexecutor) == "function",
+    hookfunc = type(hookfunction) == "function",
+    getconns = type(getconnections) == "function",
+    getgc = type(getgc) == "function",
+    gethui = type(gethui) == "function",
+    setclipboard = type(setclipboard) == "function",
+    protectgui = type(protectgui) == "function",
+    sethidden = type(sethiddenproperty) == "function",
+    getnil = type(getnilinstances) == "function",
+    requestStream = type(LocalPlayer.RequestStreamAroundAsync) == "function",
 }
 
--- ═══════════════════════════════════════════════════════════════════════════
--- 🔧 SETTINGS & CONFIG
--- ═══════════════════════════════════════════════════════════════════════════
+local executorName = "Unknown"
+if API.identify then pcall(function() executorName = identifyexecutor() end) end
 
-local Settings = {
-    W = 720, H = 560,
-    Opacity = 0.05,
-    Corner = 20,
-    FontSize = 12,
-    TitleSize = 18,
-    AnimSpeed = 0.4,
-    NotifDur = 3,
-    BorderThick = 2.5,
-    ShowCredits = true,
-    TabSize = 12,
-    ScrollW = 4,
-}
-
--- ═══ CONFIG ═══
-local Config = {
-    Speed = 16, JumpPower = 50, InfiniteJump = false, AutoJump = false,
-    Bhop = false, MoonJump = false, Sprint = false, SprintSpeed = 40,
-    AntiSlow = false, CFrameSpeed = false, CFrameSpeedVal = 2,
-    AutoDodge = false, JumpBoost = false, BunnyBoost = false, AutoSprint = false,
-    Fly = false, FlySpeed = 50, Noclip = false, NoClipFly = false,
-    GodMode = false, AntiVoid = false, AntiKnockback = false,
-    NoFallDamage = false, AntiRagdoll = false, InstantRespawn = false,
-    AntiStun = false, AntiFreeze = false,
-    ClickTP = false, Invisible = false, NoAnimation = false, Sit = false,
-    Aimbot = false, SuperAimbot = false, AimbotFOV = 200, AimbotSmooth = 1,
-    HeadAim = false, BodyAim = false, Crosshair = false,
-    AutoClick = false, AutoClickTarget = nil, SpamTool = false,
-    HitboxExpander = false, HitboxSize = 15, Reach = false, ReachDist = 20,
-    KillAura = false, KillAuraRange = 15, TPAura = false, TPAuraRange = 20,
-    Spin = false, SpinSpeed = 25, LockOn = false, LockOnTarget = nil,
-    TargetStrafe = false, StrafeRadius = 8, StrafeSpeed = 5,
-    AutoParry = false, AutoParryRange = 15, Wallbang = false,
-    AntiAim = false, AntiAimType = "Jitter", SilentAim = false, SilentAimFOV = 150,
-    TriggerBot = false, TriggerBotDelay = 0.1,
-    ESP = false, ESPDistFilter = 500, ShowPlayerTool = false,
-    RainbowESP = false, TracerLines = false, ToolESP = false,
-    ShowFPS = false, ShowTime = false, BoxESP = false,
-    HealthBarESP = false, NameESP = true, DistanceESP = true,
-    FollowPlayer = false, LoopTP = false, LoopTPDelay = 500,
-    PingPongTP = false, TPForwardDist = 20, TPUpDist = 50,
-    AutoFarmTP = false, FarmTPRange = 30,
-    AutoWalk = false, AutoWalkTarget = false, AutoCollect = false,
-    AutoActivate = false, ActivateDelay = 200, AutoRetry = false,
-    AutoRespawnEquip = false, AutoJumpDmg = false, AutoUseTools = false,
-    AntiAFKPlus = false, AutoClickNearby = false,
-    AutoFarm = false, AutoFarmRange = 30, AutoFarmDelay = 1,
-    AutoHeal = false, HealThreshold = 30, AutoEat = false,
-    AutoDrink = false, AutoSell = false, AutoBuy = false,
-    AutoUpgrade = false, AutoMerge = false, AutoOpen = false, AutoClaim = false,
-    AntiAFK = true, ChatSpy = false, AutoRespawn = false,
-    PlayerLogger = false, PingAlert = false, PingThreshold = 200,
-    XRay = false, ClickDelete = false, KillBrickRemover = false,
-    DoorUnlocker = false, ShowHidden = false, Freeze = false,
-    LockFP = false, Fullbright = false, NoFog = false,
-    NoShadows = false, MaxRenderDist = false, RemoveParticles = false,
-    RemoveDecals = false, RemoveSounds = false,
-    RainbowChar = false, NeonChar = false, TrailEffect = false,
-    PlatformTrail = false, CharGlow = false, Forcefield = false,
-    Orbit = false, SpinCharacter = false, SpinSpeedChar = 50,
-    BounceCharacter = false, FloatCharacter = false,
-    ShrinkCharacter = false, GiantCharacter = false,
-    InvisibleChar = false, GhostChar = false,
-    Waypoints = {nil, nil, nil, nil, nil},
-    LastSafePos = nil, _lastHP = 100, _lastPingAlert = 0,
-    _lastPlatform = 0, _lastClick = 0, _clickCount = 0,
-    AutoRejoin = false, AutoExecute = false, ScriptCode = "",
-    RejoinCount = 0, MaxRejoin = 999,
-    AutoClearQuest = false, QuestCleared = 0,
-    FishItAutoClick = false, FishItAutoSkip = false,
-    FishItAutoReel = false, FishItAutoCollect = false,
-    FishItClickCount = 0, FishItLastClick = 0,
-    AutoMine = false, AutoChop = false, AutoFish = false,
-    AutoHunt = false, AutoGather = false, AutoCraft = false,
-    AutoCook = false, AutoSmelt = false, AutoEnchant = false, AutoRepair = false,
-    CompactMode = false, HideMinimized = false, AutoHide = false,
-    HideDelay = 5, ShowNotifications = true, NotificationSound = false,
-}
-
--- ═══ SHARED VARIABLES ═══
-local PVPTarget = nil
-local SelP = nil
-local fps, frc, lt = 0, 0, tick()
-local flying, flyBV, flyBG = false, nil, nil
-local tracers = {}
-local isCopyingMap = false
-local copyProgress = 0
-local copyTotal = 0
-local mapCopyFolder = nil
-local MusicPlayer = nil
-local AutoClickActive = false
-local AutoClickTarget = nil
-local RejoinActive = false
-local AntiAFKActive = false
-local ESPObjects = {}
-local ESPFolder = nil
-local waypointMarkers = {}
-
--- ═══ SOUND DATA ═══
-local SoundData = {}
-local SoundListFrame = nil
-local SoundListScrolling = nil
-local SoundListLayout = nil
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🔧 DETEKSI EXECUTOR & FILE SYSTEM
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function DetectExecutor()
-    local executors = {
-        {name = "Synapse X", check = function() return syn and syn.request end},
-        {name = "Krnl", check = function() return krnl and krnl.request end},
-        {name = "Script-Ware", check = function() return scriptware and scriptware.request end},
-        {name = "Fluxus", check = function() return fluxus and fluxus.request end},
-        {name = "Oxygen U", check = function() return oxygen and oxygen.request end},
-        {name = "Electron", check = function() return electron and electron.request end},
-        {name = "Vega X", check = function() return vega and vega.request end},
-        {name = "Hydrogen", check = function() return hydrogen and hydrogen.request end},
-        {name = "Unknown", check = function() return true end},
-    }
-    for _, exec in pairs(executors) do
-        if exec.check() then return exec.name end
-    end
-    return "Unknown"
-end
-
-local EXECUTOR_NAME = DetectExecutor()
-
-local function CheckWritefileSupport()
-    local success, result = pcall(function()
-        writefile("_test.txt", "test")
-        delfile("_test.txt")
-        return true
-    end)
-    if success and result then return true end
-    return false
-end
-
-local writefileSupported = CheckWritefileSupport()
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🎨 UI FUNCTIONS
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function CreateGlow(parent, color, size, transparency)
-    local glow = Instance.new("ImageLabel")
-    glow.Size = UDim2.new(1, size, 1, size)
-    glow.Position = UDim2.new(0, -size/2, 0, -size/2)
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxassetid://5554236805"
-    glow.ImageColor3 = color or T.Glow
-    glow.ImageTransparency = transparency or 0.7
-    glow.ScaleType = Enum.ScaleType.Slice
-    glow.SliceCenter = Rect.new(23, 23, 277, 277)
-    glow.ZIndex = 0
-    glow.Parent = parent
-    return glow
-end
-
-local function CreateGradient(parent, colors, rotation)
-    local grad = Instance.new("UIGradient", parent)
-    local colorPoints = {}
-    for i, color in pairs(colors) do
-        table.insert(colorPoints, ColorSequenceKeypoint.new((i-1)/(#colors-1), color))
-    end
-    grad.Color = ColorSequence.new(colorPoints)
-    grad.Rotation = rotation or 0
-    return grad
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 📱 MAIN GUI
--- ═══════════════════════════════════════════════════════════════════════════
-
-for _, v in pairs(CoreGui:GetChildren()) do
-    if v.Name == "ETERNITY" then v:Destroy() end
-end
-
-local SG = Instance.new("ScreenGui")
-SG.Name = "ETERNITY"
-SG.ResetOnSpawn = false
-SG.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-SG.Parent = CoreGui
-
--- ═══ FPS LABEL ═══
-local FPSL = Instance.new("TextLabel")
-FPSL.Size = UDim2.new(0, 180, 0, 32)
-FPSL.Position = UDim2.new(0, 15, 0, 75)
-FPSL.BackgroundColor3 = T.Bg2
-FPSL.BackgroundTransparency = 0.2
-FPSL.Text = "FPS: 0 | Ping: 0"
-FPSL.TextColor3 = T.Gold
-FPSL.TextSize = 11
-FPSL.Font = Enum.Font.GothamBold
-FPSL.Visible = false
-FPSL.Parent = SG
-Instance.new("UICorner", FPSL).CornerRadius = UDim.new(0, 10)
-
--- ═══ CROSSHAIR ═══
-local crosshairParts = {}
-local function CreateCrosshair()
-    local configs = {
-        {2, 24, 0.5, -1, 0.5, -12},
-        {24, 2, 0.5, -12, 0.5, -1},
-        {2, 8, 0.5, -1, 0.5, -18},
-        {2, 8, 0.5, -1, 0.5, 10},
-        {8, 2, 0.5, -18, 0.5, -1},
-        {8, 2, 0.5, 10, 0.5, -1},
-    }
-    for _, cfg in pairs(configs) do
-        local f = Instance.new("Frame", SG)
-        f.Size = UDim2.new(0, cfg[1], 0, cfg[2])
-        f.Position = UDim2.new(cfg[3], cfg[4], cfg[5], cfg[6])
-        f.BackgroundColor3 = T.Gold
-        f.BorderSizePixel = 0
-        f.Visible = false
-        table.insert(crosshairParts, f)
-    end
-end
-CreateCrosshair()
-
--- ═══ MAIN FRAME ═══
-local MF = Instance.new("Frame")
-MF.Name = "Main"
-MF.Size = UDim2.new(0, Settings.W, 0, Settings.H)
-MF.Position = UDim2.new(0.5, 0, 0.5, 0)
-MF.AnchorPoint = Vector2.new(0.5, 0.5)
-MF.BackgroundColor3 = T.Bg
-MF.BackgroundTransparency = Settings.Opacity
-MF.ClipsDescendants = true
-MF.BorderSizePixel = 0
-MF.Active = true
-MF.Draggable = true
-MF.Parent = SG
-
-local MFC = Instance.new("UICorner", MF)
-MFC.CornerRadius = UDim.new(0, Settings.Corner)
-
-local MainGlow = CreateGlow(MF, T.Glow, 60, 0.5)
-
-local MFS = Instance.new("UIStroke", MF)
-MFS.Thickness = Settings.BorderThick
-MFS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-local BorderGrad = CreateGradient(MFS, {T.Gold, T.Purple, T.Gold, T.Pink, T.Gold}, 0)
-
-spawn(function()
-    local r = 0
-    while SG.Parent do
-        r = (r + 0.5) % 360
-        BorderGrad.Rotation = r
-        wait(0.03)
-    end
-end)
-
--- ═══ TITLE BAR ═══
-local TB = Instance.new("Frame")
-TB.Size = UDim2.new(1, 0, 0, 48)
-TB.BackgroundColor3 = T.Bg2
-TB.BackgroundTransparency = 0.3
-TB.BorderSizePixel = 0
-TB.ZIndex = 2
-TB.Parent = MF
-Instance.new("UICorner", TB).CornerRadius = UDim.new(0, Settings.Corner)
-
-CreateGradient(TB, {T.PurpleD, T.Bg2, T.PurpleD}, 0)
-
-local TBLine = Instance.new("Frame")
-TBLine.Size = UDim2.new(1, -30, 0, 2.5)
-TBLine.Position = UDim2.new(0, 15, 1, -2.5)
-TBLine.BackgroundColor3 = T.Gold
-TBLine.BorderSizePixel = 0
-TBLine.ZIndex = 3
-TBLine.Parent = TB
-CreateGradient(TBLine, {T.Gold, T.Purple, T.Gold, T.Pink, T.Gold}, 0)
-
-local Logo = Instance.new("TextLabel")
-Logo.Size = UDim2.new(0, 350, 1, 0)
-Logo.Position = UDim2.new(0, 18, 0, 0)
-Logo.BackgroundTransparency = 1
-Logo.Text = "✦ ETERNITY"
-Logo.TextColor3 = T.Gold
-Logo.TextSize = Settings.TitleSize
-Logo.Font = Enum.Font.GothamBold
-Logo.TextXAlignment = Enum.TextXAlignment.Left
-Logo.ZIndex = 3
-Logo.Parent = TB
-
-spawn(function()
-    local h = 0
-    while SG.Parent do
-        h = (h + 0.002) % 1
-        local c = Color3.fromHSV((h * 0.1 + 0.12) % 1, 1, 0.9)
-        Logo.TextColor3 = c
-        wait(0.03)
-    end
-end)
-
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(0, 200, 0, 16)
-SubTitle.Position = UDim2.new(0, 130, 0, 28)
-SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "✦ v7 Ultimate"
-SubTitle.TextColor3 = T.PurpleL
-SubTitle.TextSize = 10
-SubTitle.Font = Enum.Font.Gotham
-SubTitle.TextXAlignment = Enum.TextXAlignment.Left
-SubTitle.ZIndex = 3
-SubTitle.Parent = TB
-
-local Cred = Instance.new("TextLabel")
-Cred.Size = UDim2.new(0, 250, 0, 18)
-Cred.Position = UDim2.new(0, 18, 1, -24)
-Cred.BackgroundTransparency = 1
-Cred.Text = "✦ 230+ Features ✦ All Fixed ✦"
-Cred.TextColor3 = T.GoldL
-Cred.TextSize = 10
-Cred.Font = Enum.Font.GothamBold
-Cred.TextXAlignment = Enum.TextXAlignment.Left
-Cred.Parent = MF
-
--- ═══ CLOSE BUTTON ═══
-local CB = Instance.new("TextButton")
-CB.Size = UDim2.new(0, 34, 0, 34)
-CB.Position = UDim2.new(1, -42, 0, 7)
-CB.BackgroundColor3 = T.Close
-CB.Text = "✕"
-CB.TextColor3 = T.White
-CB.TextSize = 16
-CB.Font = Enum.Font.GothamBold
-CB.ZIndex = 3
-CB.Parent = TB
-Instance.new("UICorner", CB).CornerRadius = UDim.new(0, 10)
-CB.MouseButton1Click:Connect(function()
-    TweenService:Create(MF, TweenInfo.new(0.25), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-    task.wait(0.25)
-    SG:Destroy()
-end)
-
--- ═══ MINIMIZE BUTTON ═══
-local MB = Instance.new("TextButton")
-MB.Size = UDim2.new(0, 34, 0, 34)
-MB.Position = UDim2.new(1, -80, 0, 7)
-MB.BackgroundColor3 = T.PurpleD
-MB.Text = "−"
-MB.TextColor3 = T.Gold
-MB.TextSize = 22
-MB.Font = Enum.Font.GothamBold
-MB.ZIndex = 3
-MB.Parent = TB
-MB.BorderSizePixel = 0
-Instance.new("UICorner", MB).CornerRadius = UDim.new(0, 10)
-
--- ═══ TOGGLE BUTTON ═══
-local TOB = Instance.new("TextButton")
-TOB.Size = UDim2.new(0, 150, 0, 44)
-TOB.Position = UDim2.new(0, 15, 0.5, -22)
-TOB.BackgroundColor3 = T.Bg
-TOB.BackgroundTransparency = 0.1
-TOB.Text = "✦ ETERNITY"
-TOB.TextColor3 = T.Gold
-TOB.Font = Enum.Font.GothamBold
-TOB.TextSize = 14
-TOB.Visible = false
-TOB.Active = true
-TOB.ZIndex = 999
-TOB.Parent = SG
-Instance.new("UICorner", TOB).CornerRadius = UDim.new(0, 14)
-local TOBS = Instance.new("UIStroke", TOB)
-TOBS.Color = T.Gold
-TOBS.Thickness = 2
-local TOGlow = CreateGlow(TOB, T.Glow, 30, 0.6)
-
-MB.MouseButton1Click:Connect(function()
-    TweenService:Create(MF, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-    task.wait(0.2)
-    MF.Visible = false
-    TOB.Visible = true
-    TOB.Size = UDim2.new(0, 0, 0, 0)
-    TweenService:Create(TOB, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 150, 0, 44)
-    }):Play()
-end)
-
-TOB.MouseButton1Click:Connect(function()
-    TOB.Visible = false
-    MF.Visible = true
-    MF.Size = UDim2.new(0, 0, 0, 0)
-    MF.Position = UDim2.new(0.5, 0, 0.5, 0)
-    TweenService:Create(MF, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, Settings.W, 0, Settings.H)
-    }):Play()
-end)
-
-local tobDrag = false
-TOB.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-        tobDrag = true
-        local start = i.Position
-        local pos = TOB.Position
-        local mc = UserInputService.InputChanged:Connect(function(j)
-            if tobDrag and (j.UserInputType == Enum.UserInputType.MouseMovement or j.UserInputType == Enum.UserInputType.Touch) then
-                local d = j.Position - start
-                TOB.Position = UDim2.new(pos.X.Scale, pos.X.Offset + d.X, pos.Y.Scale, pos.Y.Offset + d.Y)
+-- ============================================
+-- LOGGER
+-- ============================================
+local LogBuffer = {}
+local function log(level, msg)
+    local entry = string.format("[%s] [%s] %s",
+        os.date("%H:%M:%S"), level:upper(), msg)
+    table.insert(LogBuffer, entry)
+    if #LogBuffer > 500 then table.remove(LogBuffer, 1) end
+    if CONFIG.LogToFile and API.writefile then
+        pcall(function()
+            if API.makefolder and (not API.isfolder or not isfolder(CONFIG.SaveFolder)) then
+                makefolder(CONFIG.SaveFolder)
             end
-        end)
-        local uc = UserInputService.InputEnded:Connect(function(j)
-            if j.UserInputType == Enum.UserInputType.MouseButton1 or j.UserInputType == Enum.UserInputType.Touch then
-                tobDrag = false
-                mc:Disconnect()
-                uc:Disconnect()
-            end
+            local existing = (API.readfile and API.isfile and isfile(CONFIG.SaveFolder .. "/log.txt"))
+                and readfile(CONFIG.SaveFolder .. "/log.txt") or ""
+            writefile(CONFIG.SaveFolder .. "/log.txt", existing .. entry .. "\n")
         end)
     end
-end)
+end
 
-spawn(function()
-    while SG.Parent do
-        if TOB.Visible then
-            TweenService:Create(TOBS, TweenInfo.new(0.7), {Color = T.Purple, Thickness = 3}):Play()
-            TweenService:Create(TOGlow, TweenInfo.new(0.7), {ImageTransparency = 0.4}):Play()
-            wait(0.7)
-            TweenService:Create(TOBS, TweenInfo.new(0.7), {Color = T.Gold, Thickness = 2}):Play()
-            TweenService:Create(TOGlow, TweenInfo.new(0.7), {ImageTransparency = 0.7}):Play()
-            wait(0.7)
-        else
-            wait(0.3)
+-- ============================================
+-- UTILITY
+-- ============================================
+local function safeCall(fn, ...)
+    local args = {...}
+    local ok, res = pcall(function() return fn(table.unpack(args)) end)
+    if not ok then log("error", tostring(res)) end
+    return res, ok
+end
+
+local function getGuiParent()
+    local parent
+    pcall(function() if gethui then parent = gethui() end end)
+    if not parent then
+        pcall(function() parent = game:GetService("CoreGui") end)
+    end
+    if not parent or not parent.Parent then
+        parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
+    return parent
+end
+
+local function formatBytes(bytes)
+    if bytes < 1024 then return bytes .. " B" end
+    if bytes < 1024*1024 then return string.format("%.2f KB", bytes/1024) end
+    return string.format("%.2f MB", bytes/1024/1024)
+end
+
+-- ============================================
+-- CONFIG PERSISTENCE
+-- ============================================
+local function loadConfig()
+    if not API.readfile or not API.isfile then return end
+    pcall(function()
+        if isfile(CONFIG.ConfigFile) then
+            local data = HttpService:JSONDecode(readfile(CONFIG.ConfigFile))
+            for k, v in pairs(data) do
+                if CONFIG[k] ~= nil then CONFIG[k] = v end
+            end
         end
+    end)
+end
+
+local function saveConfig()
+    if not API.writefile then return end
+    pcall(function()
+        if API.makefolder and (not API.isfolder or not isfolder(CONFIG.SaveFolder)) then
+            makefolder(CONFIG.SaveFolder)
+        end
+        local toSave = {
+            AntiDetection = CONFIG.AntiDetection,
+            AntiStreaming = CONFIG.AntiStreaming,
+            StreamRadius = CONFIG.StreamRadius,
+            StreamGridStep = CONFIG.StreamGridStep,
+            StreamWaitTime = CONFIG.StreamWaitTime,
+            MaxDepth = CONFIG.MaxDepth,
+            LogToFile = CONFIG.LogToFile,
+        }
+        writefile(CONFIG.ConfigFile, HttpService:JSONEncode(toSave))
+    end)
+end
+
+-- ============================================
+-- ANTI-DETECTION LAYER
+-- ============================================
+local function applyStealth()
+    if not CONFIG.AntiDetection then return end
+    log("info", "Applying stealth layer...")
+
+    if API.hookfunc then
+        pcall(function()
+            local oldKick = LocalPlayer.Kick
+            hookfunction(oldKick, function() 
+                log("warn", "Blocked LocalPlayer:Kick!")
+                return nil 
+            end)
+        end)
+        pcall(function()
+            local oldKick = Players.Kick
+            hookfunction(oldKick, function() 
+                log("warn", "Blocked Players:Kick!")
+                return nil 
+            end)
+        end)
     end
-end)
 
--- ═══ TAB BAR ═══
-local TabBar = Instance.new("ScrollingFrame")
-TabBar.Size = UDim2.new(1, -25, 0, 38)
-TabBar.Position = UDim2.new(0, 12, 0, 50)
-TabBar.BackgroundColor3 = T.Bg2
-TabBar.BackgroundTransparency = 0.5
-TabBar.BorderSizePixel = 0
-TabBar.ScrollBarThickness = 0
-TabBar.ScrollingDirection = Enum.ScrollingDirection.X
-TabBar.CanvasSize = UDim2.new(0, 0, 0, 0)
-TabBar.ClipsDescendants = true
-TabBar.ZIndex = 2
-TabBar.Parent = MF
-Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 12)
+    if API.protectgui then 
+        pcall(function() protectgui(gethui()) end) 
+    end
 
-local TBL = Instance.new("UIListLayout", TabBar)
-TBL.FillDirection = Enum.FillDirection.Horizontal
-TBL.SortOrder = Enum.SortOrder.LayoutOrder
-TBL.Padding = UDim.new(0, 8)
-TBL.VerticalAlignment = Enum.VerticalAlignment.Center
+    log("ok", "Stealth layer applied")
+end
 
-TBL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    TabBar.CanvasSize = UDim2.new(0, TBL.AbsoluteContentSize.X + 20, 0, 0)
-end)
+-- ============================================
+-- STREAMING BYPASS LAYER
+-- ============================================
+local STREAM_ORIGINAL_CF = nil
 
--- ═══ CONTENT AREA ═══
-local CA = Instance.new("Frame")
-CA.Size = UDim2.new(1, -25, 1, -125)
-CA.Position = UDim2.new(0, 12, 0, 92)
-CA.BackgroundColor3 = T.Bg2
-CA.BackgroundTransparency = 0.3
-CA.BorderSizePixel = 0
-CA.ClipsDescendants = true
-CA.Parent = MF
-Instance.new("UICorner", CA).CornerRadius = UDim.new(0, 16)
+local function isStreamingEnabled()
+    local ok, val = pcall(function() return Workspace.StreamingEnabled end)
+    return ok and val == true
+end
 
--- ═══ TAB SYSTEM ═══
-local Tabs = {}
-local function CreateTab(name, icon)
-    local B = Instance.new("TextButton")
-    B.Size = UDim2.new(0, 0, 1, 0)
-    B.AutomaticSize = Enum.AutomaticSize.X
-    B.BackgroundColor3 = T.Bg2
-    B.BackgroundTransparency = 0.5
-    B.Text = " " .. icon .. " " .. name .. " "
-    B.TextColor3 = T.TextDim
-    B.TextSize = Settings.TabSize
-    B.Font = Enum.Font.GothamBold
-    B.Parent = TabBar
-    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 10)
+local function tryDisableStreaming()
+    if not CONFIG.AntiStreaming then return end
+    log("info", "Attempting to disable streaming flag...")
 
-    local C = Instance.new("ScrollingFrame")
-    C.Size = UDim2.new(1, -12, 1, -12)
-    C.Position = UDim2.new(0, 6, 0, 6)
-    C.BackgroundTransparency = 1
-    C.ScrollBarThickness = Settings.ScrollW
-    C.ScrollBarImageColor3 = T.Gold
-    C.Visible = false
-    C.CanvasSize = UDim2.new(0, 0, 0, 0)
-    C.Parent = CA
-
-    local CL = Instance.new("UIListLayout", C)
-    CL.SortOrder = Enum.SortOrder.LayoutOrder
-    CL.Padding = UDim.new(0, 6)
-    CL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        C.CanvasSize = UDim2.new(0, 0, 0, CL.AbsoluteContentSize.Y + 16)
+    pcall(function()
+        if sethiddenproperty then
+            sethiddenproperty(Workspace, "StreamingEnabled", false)
+        end
     end)
 
-    Tabs[name] = {Button = B, Content = C}
-    B.MouseButton1Click:Connect(function()
-        for _, t in pairs(Tabs) do
-            t.Content.Visible = false
-            TweenService:Create(t.Button, TweenInfo.new(0.15), {
-                BackgroundColor3 = T.Bg2,
-                BackgroundTransparency = 0.5,
-                TextColor3 = T.TextDim
+    pcall(function()
+        if API.sethidden and sethiddenproperty then
+            sethiddenproperty(Workspace, "StreamingIntegrityMode", 0)
+        end
+    end)
+
+    pcall(function()
+        if API.sethidden and sethiddenproperty then
+            sethiddenproperty(Workspace, "StreamingMinRadius", math.huge)
+            sethiddenproperty(Workspace, "StreamingTargetRadius", math.huge)
+        end
+    end)
+
+    log("ok", "Streaming disable attempt done")
+end
+
+local function forceLoadStreamedAreas()
+    if not CONFIG.AntiStreaming then return end
+    if not isStreamingEnabled() then
+        log("info", "Streaming not enabled, skip bypass")
+        return
+    end
+
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    if not hrp then
+        log("warn", "No HumanoidRootPart, cannot teleport")
+        return
+    end
+
+    STREAM_ORIGINAL_CF = hrp.CFrame
+    local origin = Vector3.new(0, 50, 0)
+    local points = {}
+    local step = CONFIG.StreamGridStep
+    local rad = CONFIG.StreamRadius
+
+    for r = 0, rad, step do
+        if r == 0 then
+            table.insert(points, origin)
+        else
+            local segments = math.max(4, math.floor(r / step) * 4)
+            for i = 0, segments - 1 do
+                local ang = (i / segments) * math.pi * 2
+                table.insert(points, origin + Vector3.new(math.cos(ang) * r, 0, math.sin(ang) * r))
+            end
+        end
+        if #points >= CONFIG.StreamMaxPoints then break end
+    end
+
+    log("info", string.format("Streaming bypass: %d points to visit", #points))
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local originalWalkSpeed = humanoid and humanoid.WalkSpeed or 16
+    local originalJumpPower = humanoid and humanoid.JumpPower or 50
+
+    if humanoid then 
+        humanoid.WalkSpeed = 0 
+        pcall(function() humanoid.JumpPower = 0 end)
+    end
+
+    for i, pos in ipairs(points) do
+        if refs.statusText then
+            refs.statusText.Text = string.format("Streaming: %d/%d...", i, #points)
+            refs.statusText.TextColor3 = CONFIG.AccentColor
+        end
+        if refs.addConsole then
+            refs.addConsole(string.format("[%s] Streaming point %d/%d: (%.0f, %.0f, %.0f)",
+                os.date("%H:%M:%S"), i, #points, pos.X, pos.Y, pos.Z), CONFIG.AccentColor)
+        end
+
+        pcall(function()
+            LocalPlayer:RequestStreamAroundAsync(pos, CONFIG.StreamWaitTime)
+        end)
+
+        pcall(function()
+            hrp.CFrame = CFrame.new(pos)
+        end)
+
+        pcall(function()
+            Workspace.CurrentCamera.CFrame = CFrame.new(pos + Vector3.new(0, 100, 0))
+        end)
+
+        task.wait(CONFIG.StreamWaitTime)
+    end
+
+    if refs.statusText then
+        refs.statusText.Text = "Waiting for stream preload..."
+        refs.statusText.TextColor3 = CONFIG.WarnColor
+    end
+
+    task.wait(CONFIG.PreloadWait)
+
+    if humanoid then 
+        humanoid.WalkSpeed = originalWalkSpeed 
+        pcall(function() humanoid.JumpPower = originalJumpPower end)
+    end
+    if STREAM_ORIGINAL_CF then
+        pcall(function() hrp.CFrame = STREAM_ORIGINAL_CF end)
+    end
+
+    log("ok", "Streaming bypass completed")
+end
+
+local function getOrphanInstances()
+    local orphans = {}
+    if not API.getnil then return orphans end
+    pcall(function()
+        for _, inst in ipairs(getnilinstances()) do
+            if inst and typeof(inst) == "Instance" then
+                local parent = inst.Parent
+                if parent == nil or parent == Workspace then
+                    table.insert(orphans, inst)
+                end
+            end
+        end
+    end)
+    log("info", string.format("Found %d orphan instances", #orphans))
+    return orphans
+end
+
+-- ============================================
+-- TOAST NOTIFICATION SYSTEM
+-- ============================================
+local toastContainer
+local function initToasts(parent)
+    toastContainer = Instance.new("Frame")
+    toastContainer.Name = "ToastContainer"
+    toastContainer.Size = UDim2.new(0, 280, 1, -20)
+    toastContainer.Position = UDim2.new(1, -290, 0, 10)
+    toastContainer.BackgroundTransparency = 1
+    toastContainer.ZIndex = 10
+    toastContainer.Parent = parent
+end
+
+local function toast(title, msg, color, duration)
+    if not toastContainer then return end
+    color = color or CONFIG.ThemeColor
+    duration = duration or 3
+
+    local t = Instance.new("Frame")
+    t.Size = UDim2.new(1, 0, 0, 60)
+    t.Position = UDim2.new(1, 300, 0, 0)
+    t.BackgroundColor3 = CONFIG.PanelColor
+    t.BackgroundTransparency = 0.1
+    t.BorderSizePixel = 0
+    t.ZIndex = 10
+    t.Parent = toastContainer
+    Instance.new("UICorner", t).CornerRadius = UDim.new(0, 8)
+
+    local s = Instance.new("UIStroke")
+    s.Color = color
+    s.Thickness = 1.5
+    s.Parent = t
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 4, 1, 0)
+    bar.BackgroundColor3 = color
+    bar.BorderSizePixel = 0
+    bar.ZIndex = 11
+    bar.Parent = t
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 2)
+
+    local titleL = Instance.new("TextLabel")
+    titleL.Size = UDim2.new(1, -20, 0, 20)
+    titleL.Position = UDim2.new(0, 12, 0, 6)
+    titleL.BackgroundTransparency = 1
+    titleL.Text = title
+    titleL.TextColor3 = color
+    titleL.Font = CONFIG.Font
+    titleL.TextSize = 13
+    titleL.TextXAlignment = Enum.TextXAlignment.Left
+    titleL.ZIndex = 11
+    titleL.Parent = t
+
+    local msgL = Instance.new("TextLabel")
+    msgL.Size = UDim2.new(1, -20, 0, 30)
+    msgL.Position = UDim2.new(0, 12, 0, 26)
+    msgL.BackgroundTransparency = 1
+    msgL.Text = msg
+    msgL.TextColor3 = Color3.fromRGB(200, 200, 200)
+    msgL.Font = CONFIG.Font
+    msgL.TextSize = 11
+    msgL.TextWrapped = true
+    msgL.TextXAlignment = Enum.TextXAlignment.Left
+    msgL.TextYAlignment = Enum.TextYAlignment.Top
+    msgL.ZIndex = 11
+    msgL.Parent = t
+
+    for _, other in ipairs(toastContainer:GetChildren()) do
+        if other:IsA("Frame") then
+            TweenService:Create(other, TweenInfo.new(0.2), {
+                Position = other.Position + UDim2.new(0, 0, 0, 70)
             }):Play()
         end
-        C.Visible = true
-        TweenService:Create(B, TweenInfo.new(0.15), {
-            BackgroundColor3 = T.Gold,
-            BackgroundTransparency = 0.15,
-            TextColor3 = T.White
+    end
+
+    TweenService:Create(t, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+        Position = UDim2.new(0, 0, 0, 0)
+    }):Play()
+
+    task.delay(duration, function()
+        TweenService:Create(t, TweenInfo.new(0.3), {
+            Position = UDim2.new(1, 300, 0, 0),
+            BackgroundTransparency = 1
         }):Play()
+        task.wait(0.35)
+        if t then t:Destroy() end
     end)
-    return C
 end
 
--- ═══ UI HELPERS ═══
+-- ============================================
+-- MATRIX RAIN
+-- ============================================
+local function createMatrixRain(parent)
+    local f = Instance.new("Frame")
+    f.Name = "MatrixRain"
+    f.Size = UDim2.new(1, 0, 1, 0)
+    f.BackgroundTransparency = 1
+    f.ZIndex = 0
+    f.ClipsDescendants = true
+    f.Parent = parent
 
-local function Sec(p, t)
-    local S = Instance.new("TextLabel")
-    S.Size = UDim2.new(1, -8, 0, 26)
-    S.BackgroundTransparency = 1
-    S.Text = "✦ " .. t
-    S.TextColor3 = T.Gold
-    S.TextSize = 13
-    S.Font = Enum.Font.GothamBold
-    S.TextXAlignment = Enum.TextXAlignment.Left
-    S.Parent = p
-    local line = Instance.new("Frame")
-    line.Size = UDim2.new(1, -8, 0, 2)
-    line.Position = UDim2.new(0, 4, 1, -2)
-    line.BackgroundColor3 = T.Gold
-    line.BorderSizePixel = 0
-    line.Parent = S
-end
+    local chars = {"0","1","ア","イ","ウ","エ","オ","カ","キ","ク","ケ","コ","サ","シ","ス"}
+    local columns = {}
+    local colCount = math.floor(300 / 14)
 
-local function Tog(p, t, d, cb)
-    local F = Instance.new("Frame")
-    F.Size = UDim2.new(1, -8, 0, 36)
-    F.BackgroundColor3 = T.Bg2
-    F.BackgroundTransparency = 0.4
-    F.BorderSizePixel = 0
-    F.Parent = p
-    Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
+    for i = 1, colCount do
+        local col = Instance.new("TextLabel")
+        col.Size = UDim2.new(0, 12, 1, 0)
+        col.Position = UDim2.new(0, (i-1) * 14, 0, -math.random(100, 800))
+        col.BackgroundTransparency = 1
+        col.TextColor3 = CONFIG.ThemeColor
+        col.TextTransparency = 0.6
+        col.Font = CONFIG.Font
+        col.TextSize = 12
+        col.TextXAlignment = Enum.TextXAlignment.Center
+        col.TextYAlignment = Enum.TextYAlignment.Top
+        col.ZIndex = 0
+        col.Parent = f
 
-    local L = Instance.new("TextLabel")
-    L.Size = UDim2.new(1, -60, 1, 0)
-    L.Position = UDim2.new(0, 14, 0, 0)
-    L.BackgroundTransparency = 1
-    L.Text = t
-    L.TextColor3 = T.Text
-    L.TextSize = Settings.FontSize
-    L.Font = Enum.Font.Gotham
-    L.TextXAlignment = Enum.TextXAlignment.Left
-    L.TextTruncate = Enum.TextTruncate.AtEnd
-    L.Parent = F
-
-    local B = Instance.new("TextButton")
-    B.Size = UDim2.new(0, 50, 0, 24)
-    B.Position = UDim2.new(1, -54, 0.5, -12)
-    B.BackgroundColor3 = d and T.On or T.Off
-    B.Text = d and "ON" or "OFF"
-    B.TextSize = 9
-    B.Font = Enum.Font.GothamBold
-    B.TextColor3 = d and T.White or T.TextDim
-    B.Parent = F
-    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 12)
-
-    local on = d
-    B.MouseButton1Click:Connect(function()
-        on = not on
-        TweenService:Create(B, TweenInfo.new(0.15), {BackgroundColor3 = on and T.On or T.Off}):Play()
-        B.Text = on and "ON" or "OFF"
-        B.TextColor3 = on and T.White or T.TextDim
-        if cb then cb(on) end
-    end)
-    return function(v)
-        on = v
-        B.BackgroundColor3 = on and T.On or T.Off
-        B.Text = on and "ON" or "OFF"
-        B.TextColor3 = on and T.White or T.TextDim
-    end
-end
-
-local function Sld(p, t, mn, mx, df, cb)
-    local F = Instance.new("Frame")
-    F.Size = UDim2.new(1, -8, 0, 50)
-    F.BackgroundColor3 = T.Bg2
-    F.BackgroundTransparency = 0.4
-    F.BorderSizePixel = 0
-    F.Parent = p
-    Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
-
-    local L = Instance.new("TextLabel")
-    L.Size = UDim2.new(1, -56, 0, 18)
-    L.Position = UDim2.new(0, 14, 0, 4)
-    L.BackgroundTransparency = 1
-    L.Text = t
-    L.TextColor3 = T.Text
-    L.TextSize = 11
-    L.Font = Enum.Font.Gotham
-    L.TextXAlignment = Enum.TextXAlignment.Left
-    L.Parent = F
-
-    local V = Instance.new("TextLabel")
-    V.Size = UDim2.new(0, 44, 0, 18)
-    V.Position = UDim2.new(1, -48, 0, 4)
-    V.BackgroundTransparency = 1
-    V.Text = tostring(df)
-    V.TextColor3 = T.Gold
-    V.TextSize = 11
-    V.Font = Enum.Font.GothamBold
-    V.Parent = F
-
-    local SB = Instance.new("Frame")
-    SB.Size = UDim2.new(1, -28, 0, 6)
-    SB.Position = UDim2.new(0, 14, 0, 30)
-    SB.BackgroundColor3 = T.Off
-    SB.BorderSizePixel = 0
-    SB.Parent = F
-    Instance.new("UICorner", SB).CornerRadius = UDim.new(1, 0)
-
-    local SF = Instance.new("Frame")
-    SF.Size = UDim2.new((df - mn) / (mx - mn), 0, 1, 0)
-    SF.BackgroundColor3 = T.Gold
-    SF.BorderSizePixel = 0
-    SF.Parent = SB
-    Instance.new("UICorner", SF).CornerRadius = UDim.new(1, 0)
-
-    local dr = false
-    SB.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dr = true
-            local mc, uc
-            mc = UserInputService.InputChanged:Connect(function(j)
-                if j.UserInputType == Enum.UserInputType.MouseMovement and dr then
-                    local ps = math.clamp((j.Position.X - SB.AbsolutePosition.X) / SB.AbsoluteSize.X, 0, 1)
-                    local vl = math.floor(mn + (mx - mn) * ps + 0.5)
-                    SF.Size = UDim2.new(ps, 0, 1, 0)
-                    V.Text = tostring(vl)
-                    if cb then cb(vl) end
-                end
-            end)
-            uc = UserInputService.InputEnded:Connect(function(j)
-                if j.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dr = false
-                    mc:Disconnect()
-                    uc:Disconnect()
-                end
-            end)
+        local str = ""
+        for _ = 1, 40 do
+            str = str .. chars[math.random(1, #chars)] .. "\n"
         end
-    end)
-end
+        col.Text = str
 
-local function Btn(p, t, cb)
-    local B = Instance.new("TextButton")
-    B.Size = UDim2.new(1, -8, 0, 36)
-    B.BackgroundColor3 = T.PurpleD
-    B.Text = t
-    B.TextColor3 = T.White
-    B.TextSize = Settings.FontSize
-    B.Font = Enum.Font.GothamBold
-    B.Parent = p
-    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 10)
-    B.MouseButton1Click:Connect(function()
-        if cb then cb() end
-    end)
-end
-
-local function PDrop(p, cb)
-    local F = Instance.new("Frame")
-    F.Size = UDim2.new(1, -8, 0, 115)
-    F.BackgroundColor3 = T.Bg2
-    F.BackgroundTransparency = 0.4
-    F.BorderSizePixel = 0
-    F.Parent = p
-    Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
-
-    local SC = Instance.new("ScrollingFrame")
-    SC.Size = UDim2.new(1, -8, 1, -30)
-    SC.Position = UDim2.new(0, 4, 0, 24)
-    SC.BackgroundColor3 = T.Bg
-    SC.BackgroundTransparency = 0.3
-    SC.BorderSizePixel = 0
-    SC.ScrollBarThickness = 2
-    SC.ScrollBarImageColor3 = T.Gold
-    SC.Parent = F
-    Instance.new("UICorner", SC).CornerRadius = UDim.new(0, 8)
-
-    local SL = Instance.new("UIListLayout", SC)
-    SL.Padding = UDim.new(0, 3)
-
-    local sel = nil
-    local function Ref()
-        for _, c in pairs(SC:GetChildren()) do
-            if c:IsA("TextButton") then c:Destroy() end
-        end
-        for _, pl in pairs(Players:GetPlayers()) do
-            local PB = Instance.new("TextButton")
-            PB.Size = UDim2.new(1, -4, 0, 24)
-            PB.BackgroundColor3 = T.Bg2
-            PB.BackgroundTransparency = 0.3
-            PB.Text = " ✦ " .. pl.Name
-            PB.TextColor3 = T.Text
-            PB.TextSize = 10
-            PB.Font = Enum.Font.Gotham
-            PB.TextXAlignment = Enum.TextXAlignment.Left
-            PB.Parent = SC
-            Instance.new("UICorner", PB).CornerRadius = UDim.new(0, 6)
-            PB.MouseButton1Click:Connect(function()
-                for _, c in pairs(SC:GetChildren()) do
-                    if c:IsA("TextButton") then 
-                        TweenService:Create(c, TweenInfo.new(0.1), {BackgroundColor3 = T.Bg2, BackgroundTransparency = 0.3, TextColor3 = T.Text}):Play()
-                    end
-                end
-                TweenService:Create(PB, TweenInfo.new(0.1), {BackgroundColor3 = T.Gold, BackgroundTransparency = 0.15, TextColor3 = T.White}):Play()
-                sel = pl
-                if cb then cb(pl) end
-            end)
-        end
-        SC.CanvasSize = UDim2.new(0, 0, 0, SL.AbsoluteContentSize.Y)
+        table.insert(columns, {
+            obj = col,
+            speed = math.random(50, 200) / 100,
+            resetY = math.random(-1000, -100),
+        })
     end
-    Ref()
-    Players.PlayerAdded:Connect(Ref)
-    Players.PlayerRemoving:Connect(Ref)
-    return function() return sel end
-end
 
-local function Notify(title, text2, dur)
-    local N = Instance.new("Frame")
-    N.Size = UDim2.new(0, 340, 0, 75)
-    N.Position = UDim2.new(1, 350, 1, -90)
-    N.BackgroundColor3 = T.Bg
-    N.BackgroundTransparency = 0.1
-    N.BorderSizePixel = 0
-    N.Parent = SG
-    Instance.new("UICorner", N).CornerRadius = UDim.new(0, 16)
-    local ns = Instance.new("UIStroke", N)
-    ns.Color = T.Gold
-    ns.Thickness = 2
-    ns.Transparency = 0.3
-
-    local NTL = Instance.new("TextLabel", N)
-    NTL.Size = UDim2.new(1, -16, 0, 24)
-    NTL.Position = UDim2.new(0, 14, 0, 4)
-    NTL.BackgroundTransparency = 1
-    NTL.Text = "✦ " .. title
-    NTL.TextColor3 = T.Gold
-    NTL.TextSize = 13
-    NTL.Font = Enum.Font.GothamBold
-    NTL.TextXAlignment = Enum.TextXAlignment.Left
-
-    local NTX = Instance.new("TextLabel", N)
-    NTX.Size = UDim2.new(1, -16, 0, 35)
-    NTX.Position = UDim2.new(0, 14, 0, 30)
-    NTX.BackgroundTransparency = 1
-    NTX.Text = text2
-    NTX.TextColor3 = T.Text
-    NTX.TextSize = 11
-    NTX.Font = Enum.Font.Gotham
-    NTX.TextXAlignment = Enum.TextXAlignment.Left
-    NTX.TextWrapped = true
-
-    TweenService:Create(N, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Position = UDim2.new(1, -360, 1, -90)}):Play()
-    task.delay(dur or Settings.NotifDur, function()
-        TweenService:Create(N, TweenInfo.new(0.3), {Position = UDim2.new(1, 350, 1, -90)}):Play()
-        task.wait(0.3)
-        N:Destroy()
-    end)
-end
-
--- Open animation
-MF.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(MF, TweenInfo.new(Settings.AnimSpeed, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, Settings.W, 0, Settings.H)
-}):Play()
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🛠️ FUNGSI DASAR
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function SimulateClick()
-    local success, result = pcall(function()
-        if mouse1click then mouse1click(); return true end
-        return false
-    end)
-    if success and result then return true end
-    
-    success, result = pcall(function()
-        local vu = game:GetService("VirtualUser")
-        if vu then vu:CaptureController(); vu:ClickButton2(Vector2.new()); return true end
-        return false
-    end)
-    if success and result then return true end
-    
-    success, result = pcall(function()
-        local inputService = game:GetService("UserInputService")
-        if inputService then
-            inputService:SetMouseButtonEnabled(Enum.UserInputType.MouseButton1, true)
-            wait(0.05)
-            inputService:SetMouseButtonEnabled(Enum.UserInputType.MouseButton1, false)
-            return true
-        end
-        return false
-    end)
-    if success and result then return true end
-    
-    return false
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🗺️ COPY MAP FEATURE (DENGAN PROGRESS BAR)
--- ═══════════════════════════════════════════════════════════════════════════
-
--- ═══ PROGRESS BAR FRAME ═══
-local ProgressFrame = Instance.new("Frame")
-ProgressFrame.Size = UDim2.new(0, 520, 0, 130)
-ProgressFrame.Position = UDim2.new(0.5, -260, 0.5, -65)
-ProgressFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-ProgressFrame.BackgroundColor3 = T.Bg
-ProgressFrame.BackgroundTransparency = 0.1
-ProgressFrame.Visible = false
-ProgressFrame.ZIndex = 999
-ProgressFrame.Parent = SG
-Instance.new("UICorner", ProgressFrame).CornerRadius = UDim.new(0, 20)
-local PFS = Instance.new("UIStroke", ProgressFrame)
-PFS.Color = T.Gold
-PFS.Thickness = 2
-PFS.Transparency = 0.3
-
-local ProgGlow = CreateGlow(ProgressFrame, T.Glow, 40, 0.7)
-
-local ProgTitle = Instance.new("TextLabel", ProgressFrame)
-ProgTitle.Size = UDim2.new(1, -20, 0, 32)
-ProgTitle.Position = UDim2.new(0, 12, 0, 5)
-ProgTitle.BackgroundTransparency = 1
-ProgTitle.Text = "📦 Copying Map..."
-ProgTitle.TextColor3 = T.Gold
-ProgTitle.TextSize = 17
-ProgTitle.Font = Enum.Font.GothamBold
-ProgTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-local ProgStatus = Instance.new("TextLabel", ProgressFrame)
-ProgStatus.Size = UDim2.new(1, -20, 0, 22)
-ProgStatus.Position = UDim2.new(0, 12, 0, 38)
-ProgStatus.BackgroundTransparency = 1
-ProgStatus.Text = "Initializing..."
-ProgStatus.TextColor3 = T.Text
-ProgStatus.TextSize = 11
-ProgStatus.Font = Enum.Font.Gotham
-ProgStatus.TextXAlignment = Enum.TextXAlignment.Left
-ProgStatus.TextTruncate = Enum.TextTruncate.AtEnd
-
-local ProgBg = Instance.new("Frame", ProgressFrame)
-ProgBg.Size = UDim2.new(1, -24, 0, 22)
-ProgBg.Position = UDim2.new(0, 12, 0, 65)
-ProgBg.BackgroundColor3 = T.ProgressBg
-ProgBg.BorderSizePixel = 0
-Instance.new("UICorner", ProgBg).CornerRadius = UDim.new(0, 11)
-
-local ProgFill = Instance.new("Frame", ProgBg)
-ProgFill.Size = UDim2.new(0, 0, 1, 0)
-ProgFill.BackgroundColor3 = T.Gold
-ProgFill.BorderSizePixel = 0
-Instance.new("UICorner", ProgFill).CornerRadius = UDim.new(0, 11)
-CreateGradient(ProgFill, {T.Gold, T.Purple, T.Gold}, 0)
-
-local ProgPercent = Instance.new("TextLabel", ProgressFrame)
-ProgPercent.Size = UDim2.new(1, -20, 0, 22)
-ProgPercent.Position = UDim2.new(0, 12, 0, 90)
-ProgPercent.BackgroundTransparency = 1
-ProgPercent.Text = "0%"
-ProgPercent.TextColor3 = T.Gold
-ProgPercent.TextSize = 15
-ProgPercent.Font = Enum.Font.GothamBold
-
-local ProgCancel = Instance.new("TextButton", ProgressFrame)
-ProgCancel.Size = UDim2.new(0, 90, 0, 32)
-ProgCancel.Position = UDim2.new(1, -102, 0, 90)
-ProgCancel.BackgroundColor3 = T.Close
-ProgCancel.Text = "Cancel"
-ProgCancel.TextColor3 = T.White
-ProgCancel.TextSize = 12
-ProgCancel.Font = Enum.Font.GothamBold
-Instance.new("UICorner", ProgCancel).CornerRadius = UDim.new(0, 10)
-
--- ═══ UPDATE PROGRESS ═══
-local function UpdateProgress(status, progress, total)
-    copyProgress = progress or copyProgress
-    copyTotal = total or copyTotal
-    
-    local percent = copyTotal > 0 and (copyProgress / copyTotal * 100) or 0
-    ProgStatus.Text = status or "Processing..."
-    ProgFill.Size = UDim2.new(math.clamp(percent / 100, 0, 1), 0, 1, 0)
-    ProgPercent.Text = string.format("%.1f%%", percent)
-    
-    if percent >= 100 and copyTotal > 0 then
-        TweenService:Create(ProgressFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-        task.wait(0.3)
-        ProgressFrame.Visible = false
-        isCopyingMap = false
-        MF.Visible = true
-        Notify("✅ Copy Complete", "Map copied successfully!\nItems: " .. copyTotal, 4)
-    end
-end
-
-ProgCancel.MouseButton1Click:Connect(function()
-    if isCopyingMap then
-        isCopyingMap = false
-        ProgressFrame.Visible = false
-        MF.Visible = true
-        Notify("⚠️ Cancelled", "Map copy cancelled!", 2)
-    end
-end)
-
--- ═══ COPY MAP FUNCTION ═══
-local function CopyMap()
-    if isCopyingMap then 
-        Notify("⚠️ Warning", "Copy already in progress!", 2)
-        return 
-    end
-    
-    isCopyingMap = true
-    copyProgress = 0
-    copyTotal = 0
-    
-    ProgressFrame.Visible = true
-    MF.Visible = false
-    UpdateProgress("Scanning map...", 0, 1)
-    
-    mapCopyFolder = Instance.new("Folder")
-    mapCopyFolder.Name = "CopiedMap_" .. os.time()
-    mapCopyFolder.Parent = CoreGui
-    
-    spawn(function()
-        local function SafeCall(func, ...)
-            local success, result = pcall(func, ...)
-            if not success then warn("Error: " .. tostring(result)) end
-            return success, result
-        end
-        
-        SafeCall(function()
-            local services = {
-                Workspace,
-                Lighting,
-                SoundService,
-                ReplicatedStorage,
-                ServerStorage
-            }
-            
-            local totalItems = 0
-            for _, service in pairs(services) do
-                for _, child in pairs(service:GetChildren()) do
-                    if child:IsA("BasePart") or child:IsA("Model") or child:IsA("Tool") or 
-                       child:IsA("Sound") or child:IsA("Folder") or child:IsA("MeshPart") or
-                       child:IsA("Decal") or child:IsA("Texture") or child:IsA("Script") or
-                       child:IsA("LocalScript") then
-                        totalItems = totalItems + 1
-                    end
-                end
+    local conn = RunService.Heartbeat:Connect(function()
+        for _, c in ipairs(columns) do
+            if c.obj and c.obj.Parent then
+                local pos = c.obj.Position
+                local newY = pos.Y.Offset + c.speed * 2
+                if newY > 500 then newY = c.resetY end
+                c.obj.Position = UDim2.new(0, pos.X.Offset, 0, newY)
             end
-            copyTotal = totalItems
-            
-            if totalItems == 0 then
-                UpdateProgress("No items found!", 0, 1)
-                isCopyingMap = false
-                ProgressFrame.Visible = false
-                MF.Visible = true
-                Notify("⚠️ Error", "No items found to copy!", 2)
-                return
-            end
-            
-            local currentItem = 0
-            for _, service in pairs(services) do
-                local serviceName = service.Name
-                local serviceFolder = Instance.new("Folder")
-                serviceFolder.Name = serviceName
-                serviceFolder.Parent = mapCopyFolder
-                
-                for _, child in pairs(service:GetChildren()) do
-                    if not isCopyingMap then break end
-                    
-                    if child:IsA("BasePart") or child:IsA("Model") or child:IsA("Tool") or 
-                       child:IsA("Sound") or child:IsA("Folder") or child:IsA("MeshPart") or
-                       child:IsA("Decal") or child:IsA("Texture") or child:IsA("Script") or
-                       child:IsA("LocalScript") then
-                        
-                        currentItem = currentItem + 1
-                        UpdateProgress(string.format("Copying: %s (%d/%d)", child.Name, currentItem, totalItems), currentItem, totalItems)
-                        
-                        local cloned = child:Clone()
-                        cloned.Parent = serviceFolder
-                        
-                        local meta = Instance.new("StringValue", cloned)
-                        meta.Name = "_OriginalPath"
-                        meta.Value = child:GetFullName()
-                        
-                        wait(0.01)
-                    end
-                end
-            end
-            
-            if isCopyingMap then
-                local mapData = {
-                    timestamp = os.time(),
-                    date = os.date("%Y-%m-%d %H:%M:%S"),
-                    placeId = game.PlaceId,
-                    placeName = game.Name,
-                    totalItems = copyTotal,
-                    executor = EXECUTOR_NAME
-                }
-                
-                local dataSave = Instance.new("StringValue", mapCopyFolder)
-                dataSave.Name = "MapData"
-                dataSave.Value = HttpService:JSONEncode(mapData)
-                
-                UpdateProgress("✅ Complete!", copyTotal, copyTotal)
-                
-                Notify("✅ Map Copied!", 
-                    string.format("Copied %d items!\n💡 Click 'Save Map to File' to save permanently.", 
-                    copyTotal), 4)
-            end
-        end)
+        end
     end)
+
+    return f, conn
 end
 
--- ═══ SAVE MAP TO FILE ═══
-local function SaveMapToFile()
-    if not mapCopyFolder then
-        Notify("❌ Error", "No copied data found! Copy a map first.", 3)
-        return false
+-- ============================================
+-- LOADING SCREEN
+-- ============================================
+local function createLoadingScreen()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "HackerLoading_" .. tostring(math.random(1000,9999))
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 999999
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    gui.Parent = getGuiParent()
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BorderSizePixel = 0
+    bg.ZIndex = 1
+    bg.Parent = gui
+
+    local matrixBg = Instance.new("Frame")
+    matrixBg.Size = UDim2.new(1, 0, 1, 0)
+    matrixBg.BackgroundTransparency = 1
+    matrixBg.ZIndex = 1
+    matrixBg.Parent = bg
+
+    local chars = {"0","1"}
+    local cols = math.floor(400 / 16)
+    local colsData = {}
+    for i = 1, cols do
+        local c = Instance.new("TextLabel")
+        c.Size = UDim2.new(0, 14, 1, 0)
+        c.Position = UDim2.new(0, (i-1)*16, 0, -math.random(100, 800))
+        c.BackgroundTransparency = 1
+        c.TextColor3 = CONFIG.ThemeColor
+        c.TextTransparency = 0.75
+        c.Font = CONFIG.Font
+        c.TextSize = 14
+        c.TextXAlignment = Enum.TextXAlignment.Center
+        c.TextYAlignment = Enum.TextYAlignment.Top
+        c.ZIndex = 1
+        c.Parent = matrixBg
+        local str = ""
+        for _ = 1, 60 do str = str .. chars[math.random(1,2)] .. "\n" end
+        c.Text = str
+        table.insert(colsData, {obj=c, spd=math.random(50,150)/100})
     end
-    
-    if not writefileSupported then
-        Notify("❌ Error", "Writefile not supported! Use copy instead.", 2)
-        return false
+
+    local matrixConn = RunService.Heartbeat:Connect(function()
+        for _, c in ipairs(colsData) do
+            if c.obj and c.obj.Parent then
+                local p = c.obj.Position
+                local y = p.Y.Offset + c.spd * 2
+                if y > 600 then y = -900 end
+                c.obj.Position = UDim2.new(0, p.X.Offset, 0, y)
+            end
+        end
+    end)
+
+    local c = Instance.new("Frame")
+    c.Size = UDim2.new(0, 340, 0, 220)
+    c.Position = UDim2.new(0.5, -170, 0.5, -110)
+    c.BackgroundColor3 = CONFIG.BgColor
+    c.BackgroundTransparency = 0.1
+    c.BorderSizePixel = 0
+    c.ZIndex = 5
+    c.Parent = gui
+    Instance.new("UICorner", c).CornerRadius = UDim.new(0, 12)
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = CONFIG.ThemeColor
+    stroke.Thickness = 1.5
+    stroke.Transparency = 0.2
+    stroke.Parent = c
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -30, 0, 30)
+    title.Position = UDim2.new(0, 15, 0, 15)
+    title.BackgroundTransparency = 1
+    title.Text = "> HACKER MAP COPIER PRO MAX v3.1_"
+    title.TextColor3 = CONFIG.ThemeColor
+    title.Font = CONFIG.Font
+    title.TextSize = 15
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.ZIndex = 6
+    title.Parent = c
+
+    local blink = true
+    local cursorConn = RunService.RenderStepped:Connect(function()
+        blink = not blink
+        title.Text = "> HACKER MAP COPIER PRO MAX v3.1" .. (blink and "_" or " ")
+    end)
+
+    local logLabel = Instance.new("TextLabel")
+    logLabel.Size = UDim2.new(1, -30, 0, 25)
+    logLabel.Position = UDim2.new(0, 15, 0, 50)
+    logLabel.BackgroundTransparency = 1
+    logLabel.Text = ""
+    logLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
+    logLabel.Font = CONFIG.Font
+    logLabel.TextSize = 12
+    logLabel.TextXAlignment = Enum.TextXAlignment.Left
+    logLabel.ZIndex = 6
+    logLabel.Parent = c
+
+    local spinLabel = Instance.new("TextLabel")
+    spinLabel.Size = UDim2.new(0, 20, 0, 25)
+    spinLabel.Position = UDim2.new(1, -35, 0, 50)
+    spinLabel.BackgroundTransparency = 1
+    spinLabel.Text = "|"
+    spinLabel.TextColor3 = CONFIG.AccentColor
+    spinLabel.Font = CONFIG.Font
+    spinLabel.TextSize = 14
+    spinLabel.ZIndex = 6
+    spinLabel.Parent = c
+
+    local spinnerChars = {"|","/","-","\\"}
+    local spinnerIdx = 1
+    task.spawn(function()
+        while spinLabel.Parent do
+            spinnerIdx = spinnerIdx % #spinnerChars + 1
+            spinLabel.Text = spinnerChars[spinnerIdx]
+            task.wait(0.1)
+        end
+    end)
+
+    local barBg = Instance.new("Frame")
+    barBg.Size = UDim2.new(0.85, 0, 0, 22)
+    barBg.Position = UDim2.new(0.075, 0, 0.65, 0)
+    barBg.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    barBg.BorderSizePixel = 0
+    barBg.ZIndex = 6
+    barBg.Parent = c
+    Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 6)
+
+    local barFill = Instance.new("Frame")
+    barFill.Size = UDim2.new(0, 0, 1, 0)
+    barFill.BackgroundColor3 = CONFIG.ThemeColor
+    barFill.BorderSizePixel = 0
+    barFill.ZIndex = 7
+    barFill.Parent = barBg
+    Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 6)
+
+    local grad = Instance.new("UIGradient")
+    grad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, CONFIG.ThemeColor),
+        ColorSequenceKeypoint.new(1, CONFIG.AccentColor),
+    })
+    grad.Parent = barFill
+
+    local percentLabel = Instance.new("TextLabel")
+    percentLabel.Size = UDim2.new(1, 0, 0, 20)
+    percentLabel.Position = UDim2.new(0, 0, 0.82, 0)
+    percentLabel.BackgroundTransparency = 1
+    percentLabel.Text = "0%"
+    percentLabel.TextColor3 = CONFIG.ThemeColor
+    percentLabel.Font = CONFIG.Font
+    percentLabel.TextSize = 15
+    percentLabel.ZIndex = 6
+    percentLabel.Parent = c
+
+    return gui, barFill, percentLabel, logLabel, function()
+        cursorConn:Disconnect()
+        matrixConn:Disconnect()
     end
-    
-    local exportData = {
-        timestamp = os.time(),
-        date = os.date("%Y-%m-%d %H:%M:%S"),
-        placeId = game.PlaceId,
-        placeName = game.Name,
-        totalItems = 0,
-        services = {},
-        executor = EXECUTOR_NAME,
-        gameVersion = game.Version or "Unknown"
+end
+
+local function runLoading()
+    local gui, barFill, percentLabel, logLabel, cleanup = createLoadingScreen()
+    local logs = {
+        "Initializing core...",
+        "Checking APIs...",
+        "Applying stealth...",
+        "Loading config...",
+        "Checking streaming...",
+        "Ready!"
     }
-    
-    for _, serviceFolder in pairs(mapCopyFolder:GetChildren()) do
-        if serviceFolder:IsA("Folder") and serviceFolder.Name ~= "MapData" then
-            local serviceData = {name = serviceFolder.Name, items = {}}
-            
-            for _, item in pairs(serviceFolder:GetChildren()) do
-                if not item:IsA("StringValue") or item.Name ~= "_OriginalPath" then
-                    local itemData = {
-                        name = item.Name,
-                        className = item.ClassName,
-                        properties = {}
-                    }
-                    
-                    if item:IsA("BasePart") then
-                        itemData.properties.position = tostring(item.Position)
-                        itemData.properties.size = tostring(item.Size)
-                        itemData.properties.color = tostring(item.Color)
-                        itemData.properties.material = tostring(item.Material)
-                        itemData.properties.transparency = item.Transparency
-                        itemData.properties.anchored = item.Anchored
-                        itemData.properties.canCollide = item.CanCollide
-                    elseif item:IsA("Sound") then
-                        itemData.properties.soundId = item.SoundId
-                        itemData.properties.volume = item.Volume
-                        itemData.properties.looped = item.Looped
-                    elseif item:IsA("Script") or item:IsA("LocalScript") then
-                        itemData.properties.source = string.sub(item.Source, 1, 500) .. "..."
-                    end
-                    
-                    table.insert(serviceData.items, itemData)
-                    exportData.totalItems = exportData.totalItems + 1
-                end
-            end
-            
-            table.insert(exportData.services, serviceData)
+
+    local progress = 0
+    local lastIdx = 1
+    local conn
+    conn = RunService.Heartbeat:Connect(function(dt)
+        progress = math.min(progress + dt * (100 / CONFIG.LoadingDuration), 100)
+        barFill.Size = UDim2.new(progress/100, 0, 1, 0)
+        percentLabel.Text = string.format("%.1f%%", progress)
+
+        local idx = math.min(math.floor(progress / 17) + 1, #logs)
+        if idx ~= lastIdx then
+            lastIdx = idx
+            logLabel.Text = "> " .. logs[idx]
         end
-    end
-    
-    local jsonData = HttpService:JSONEncode(exportData)
-    local filename = "CopiedMap_" .. os.time() .. ".json"
-    local saved = false
-    
-    pcall(function()
-        writefile(filename, jsonData)
-        saved = true
+
+        if progress >= 100 then
+            conn:Disconnect()
+            task.wait(0.4)
+            cleanup()
+            gui:Destroy()
+            openMainUI()
+        end
     end)
-    
-    if saved then
-        Notify("💾 File Saved!", 
-            string.format("✅ %s saved!\n📍 Executor: %s\n📦 Items: %d\n💾 Size: %d KB", 
-            filename, EXECUTOR_NAME, exportData.totalItems, #jsonData / 1024), 5)
-        return true
-    else
-        Notify("❌ Error", "Failed to save file!\nTry copying data to clipboard instead.", 3)
-        return false
-    end
 end
 
--- ═══ LOAD MAP FROM FILE ═══
-local function LoadMapFromFile()
-    local files = {}
-    pcall(function()
-        local allFiles = listfiles("/")
-        for _, file in pairs(allFiles) do
-            if file:match("CopiedMap_.*%.json") then
-                table.insert(files, file)
-            end
-        end
-    end)
-    
-    if #files == 0 then
-        Notify("❌ Error", "No saved map files found!", 3)
-        return nil
-    end
-    
-    table.sort(files)
-    local latestFile = files[#files]
-    local data = nil
-    
-    pcall(function()
-        data = readfile(latestFile)
-    end)
-    
-    if data then
-        local parsed = HttpService:JSONDecode(data)
-        Notify("📂 File Loaded!", 
-            string.format("✅ %s loaded!\n📦 Items: %d\n📅 Date: %s", 
-            latestFile:gsub("./", ""), parsed.totalItems, parsed.date), 4)
-        return parsed
-    else
-        Notify("❌ Error", "Failed to load file!", 3)
-        return nil
-    end
-end
+-- ============================================
+-- UI UTAMA
+-- ============================================
+local mainGui, refs = nil, {}
+local SAVE_IN_PROGRESS = false
+local MATRIX_ENABLED = true
+local matrixConn = nil
 
--- ═══ LIST SAVED FILES ═══
-local function ListSavedFiles()
-    local files = {}
-    pcall(function()
-        local allFiles = listfiles("/")
-        for _, file in pairs(allFiles) do
-            if file:match("CopiedMap_.*%.json") then
-                table.insert(files, file)
-            end
+local function openMainUI()
+    mainGui = Instance.new("ScreenGui")
+    mainGui.Name = "HackerMapCopier_" .. tostring(math.random(1000,9999))
+    mainGui.ResetOnSpawn = false
+    mainGui.DisplayOrder = 999998
+    mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    mainGui.Parent = getGuiParent()
+
+    local matrixBg = Instance.new("Frame")
+    matrixBg.Size = UDim2.new(1, 0, 1, 0)
+    matrixBg.BackgroundTransparency = 1
+    matrixBg.ZIndex = -1
+    matrixBg.Parent = mainGui
+    local _, mConn = createMatrixRain(matrixBg)
+    matrixConn = mConn
+
+    local window = Instance.new("Frame")
+    window.Size = UDim2.new(0, 380, 0, 440)
+    window.Position = UDim2.new(0.5, -190, 0.5, -220)
+    window.BackgroundColor3 = CONFIG.BgColor
+    window.BackgroundTransparency = 0.05
+    window.BorderSizePixel = 0
+    window.Active = true
+    window.Draggable = true
+    window.Parent = mainGui
+    Instance.new("UICorner", window).CornerRadius = UDim.new(0, 12)
+
+    local winStroke = Instance.new("UIStroke")
+    winStroke.Color = CONFIG.ThemeColor
+    winStroke.Thickness = 1.5
+    winStroke.Transparency = 0.2
+    winStroke.Parent = window
+
+    local tb = Instance.new("Frame")
+    tb.Size = UDim2.new(1, 0, 0, 42)
+    tb.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    tb.BorderSizePixel = 0
+    tb.Parent = window
+    Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 12)
+
+    local tl = Instance.new("TextLabel")
+    tl.Size = UDim2.new(1, -100, 1, 0)
+    tl.Position = UDim2.new(0, 15, 0, 0)
+    tl.BackgroundTransparency = 1
+    tl.Text = "> HACKER MAP COPIER v3.1_"
+    tl.TextColor3 = CONFIG.ThemeColor
+    tl.Font = CONFIG.Font
+    tl.TextSize = 14
+    tl.TextXAlignment = Enum.TextXAlignment.Left
+    tl.Parent = tb
+
+    task.spawn(function()
+        local b = true
+        while mainGui and mainGui.Parent do
+            task.wait(0.5)
+            b = not b
+            tl.Text = "> HACKER MAP COPIER v3.1" .. (b and "_" or " ")
         end
     end)
-    
-    if #files == 0 then
-        Notify("📁 Files", "No saved map files found!", 3)
-        return
+
+    local function makeWinBtn(text, xOff, color, cb)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 28, 0, 28)
+        btn.Position = UDim2.new(1, xOff, 0, 7)
+        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        btn.Text = text
+        btn.TextColor3 = color
+        btn.Font = Enum.Font.Code
+        btn.TextSize = 15
+        btn.BorderSizePixel = 0
+        btn.Parent = tb
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        btn.MouseButton1Click:Connect(cb)
+        return btn
     end
-    
-    local fileList = {}
-    for i, file in ipairs(files) do
-        local size = 0
-        pcall(function()
-            local data = readfile(file)
-            if data then size = math.floor(data:len() / 1024) end
+
+    makeWinBtn("X", -36, CONFIG.DangerColor, function()
+        if matrixConn then matrixConn:Disconnect() end
+        mainGui:Destroy()
+    end)
+
+    local minimized = false
+    makeWinBtn("-", -70, CONFIG.WarnColor, function()
+        minimized = not minimized
+        window.Size = minimized and UDim2.new(0, 380, 0, 42) or UDim2.new(0, 380, 0, 440)
+    end)
+
+    -- Tabs
+    local tabsBar = Instance.new("Frame")
+    tabsBar.Size = UDim2.new(1, -20, 0, 32)
+    tabsBar.Position = UDim2.new(0, 10, 0, 50)
+    tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    tabsBar.BorderSizePixel = 0
+    tabsBar.Parent = window
+    Instance.new("UICorner", tabsBar).CornerRadius = UDim.new(0, 6)
+
+    local tabList = {"MAIN", "CONSOLE", "STATS", "SETTINGS"}
+    local tabButtons, tabPages = {}, {}
+    local activeTab = "MAIN"
+
+    local pagesContainer = Instance.new("Frame")
+    pagesContainer.Size = UDim2.new(1, -20, 1, -145)
+    pagesContainer.Position = UDim2.new(0, 10, 0, 90)
+    pagesContainer.BackgroundTransparency = 1
+    pagesContainer.Parent = window
+
+    local function switchTab(name)
+        activeTab = name
+        for tName, btn in pairs(tabButtons) do
+            local active = (tName == name)
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                BackgroundColor3 = active and Color3.fromRGB(0, 80, 60) or Color3.fromRGB(15, 15, 20),
+                TextColor3 = active and CONFIG.ThemeColor or Color3.fromRGB(120, 120, 120),
+            }):Play()
+        end
+        for pName, pg in pairs(tabPages) do
+            pg.Visible = (pName == name)
+        end
+    end
+
+    for i, tabName in ipairs(tabList) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1/#tabList, -4, 1, -4)
+        btn.Position = UDim2.new((i-1)/#tabList, 2, 0, 2)
+        btn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        btn.Text = tabName
+        btn.TextColor3 = Color3.fromRGB(120, 120, 120)
+        btn.Font = CONFIG.Font
+        btn.TextSize = 11
+        btn.BorderSizePixel = 0
+        btn.Parent = tabsBar
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+        btn.MouseButton1Click:Connect(function() switchTab(tabName) end)
+        tabButtons[tabName] = btn
+
+        local pg = Instance.new("Frame")
+        pg.Size = UDim2.new(1, 0, 1, 0)
+        pg.BackgroundTransparency = 1
+        pg.Visible = false
+        pg.Parent = pagesContainer
+        tabPages[tabName] = pg
+    end
+
+    -- ============================================
+    -- TAB: MAIN
+    -- ============================================
+    local mainPage = tabPages["MAIN"]
+
+    local info = Instance.new("Frame")
+    info.Size = UDim2.new(1, 0, 0, 90)
+    info.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    info.BorderSizePixel = 0
+    info.Parent = mainPage
+    Instance.new("UICorner", info).CornerRadius = UDim.new(0, 8)
+
+    local infoStroke = Instance.new("UIStroke")
+    infoStroke.Color = CONFIG.ThemeColor
+    infoStroke.Thickness = 1
+    infoStroke.Transparency = 0.6
+    infoStroke.Parent = info
+
+    local infoT = Instance.new("TextLabel")
+    infoT.Size = UDim2.new(1, -20, 0, 18)
+    infoT.Position = UDim2.new(0, 10, 0, 5)
+    infoT.BackgroundTransparency = 1
+    infoT.Text = "> SYSTEM STATUS"
+    infoT.TextColor3 = CONFIG.ThemeColor
+    infoT.Font = CONFIG.Font
+    infoT.TextSize = 11
+    infoT.TextXAlignment = Enum.TextXAlignment.Left
+    infoT.Parent = info
+
+    local streamingStatus = isStreamingEnabled() and "ENABLED" or "DISABLED"
+    local infoBody = Instance.new("TextLabel")
+    infoBody.Size = UDim2.new(1, -20, 0, 62)
+    infoBody.Position = UDim2.new(0, 10, 0, 24)
+    infoBody.BackgroundTransparency = 1
+    infoBody.Text = string.format(
+        "Executor: %s | Stealth: %s\nWriteFile: %s | Streaming: %s\nFolder: %s",
+        executorName,
+        CONFIG.AntiDetection and "ON" or "OFF",
+        API.writefile and "ON" or "OFF",
+        streamingStatus,
+        CONFIG.SaveFolder
+    )
+    infoBody.TextColor3 = Color3.fromRGB(180, 255, 180)
+    infoBody.Font = CONFIG.Font
+    infoBody.TextSize = 10
+    infoBody.TextXAlignment = Enum.TextXAlignment.Left
+    infoBody.TextYAlignment = Enum.TextYAlignment.Top
+    infoBody.Parent = info
+
+    local function makeBtn(text, y, color, bg, cb)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 46)
+        btn.Position = UDim2.new(0, 0, 0, y)
+        btn.BackgroundColor3 = bg
+        btn.Text = text
+        btn.TextColor3 = color
+        btn.Font = CONFIG.Font
+        btn.TextSize = 15
+        btn.BorderSizePixel = 0
+        btn.Parent = mainPage
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        local s = Instance.new("UIStroke")
+        s.Color = color
+        s.Thickness = 1.5
+        s.Transparency = 0.3
+        s.Parent = btn
+        btn.MouseButton1Click:Connect(cb)
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                BackgroundColor3 = Color3.fromRGB(
+                    math.min(bg.R*255+30, 255),
+                    math.min(bg.G*255+30, 255),
+                    math.min(bg.B*255+30, 255)
+                )
+            }):Play()
         end)
-        table.insert(fileList, string.format("%d. %s (%d KB)", i, file:gsub("./", ""), size))
-    end
-    
-    Notify("📁 Saved Files", table.concat(fileList, "\n"), 5)
-end
-
--- ═══ CLEAR COPIED DATA ═══
-local function ClearCopiedData()
-    if mapCopyFolder then
-        mapCopyFolder:Destroy()
-        mapCopyFolder = nil
-        Notify("🗑️ Cleared", "Copied data removed!", 2)
-    else
-        Notify("🗑️ Cleared", "No data to clear!", 2)
-    end
-end
-
--- ═══ VIEW COPIED DATA ═══
-local function ViewCopiedData()
-    if not mapCopyFolder then
-        Notify("📋 Data", "No copied data found!", 2)
-        return
-    end
-    
-    local items = {}
-    for _, child in pairs(mapCopyFolder:GetChildren()) do
-        if child:IsA("Folder") then
-            table.insert(items, "📁 " .. child.Name .. " (" .. #child:GetChildren() .. " items)")
-        end
-    end
-    
-    if #items > 0 then
-        Notify("📋 Copied Data", table.concat(items, "\n"), 5)
-    else
-        Notify("📋 Data", "No items found!", 2)
-    end
-end
-
--- ═══ COUNT MAP OBJECTS ═══
-local function CountMapObjects()
-    local count = 0
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("BasePart") or v:IsA("Model") or v:IsA("MeshPart") then
-            count = count + 1
-        end
-    end
-    Notify("📊 Map Objects", string.format("Total objects: %d", count), 3)
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🎵 SOUND ID DETECTOR
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function ScanAllSounds()
-    local soundList = {}
-    local count = 0
-    
-    for _, v in pairs(SoundService:GetChildren()) do
-        if v:IsA("Sound") then
-            local id = v.SoundId or ""
-            local name = v.Name or "Unnamed"
-            local assetId = id:match("rbxassetid://(%d+)") or id:match("asset%?id=(%d+)") or id
-            if assetId == "" then assetId = "No ID" end
-            
-            table.insert(soundList, {
-                Name = name, AssetId = assetId, FullId = id,
-                IsPlaying = v.Playing or false, Volume = v.Volume or 0,
-                Looped = v.Looped or false, Parent = "SoundService",
-                Type = id:find("rbxasset") and "Music" or "Effect"
-            })
-            count = count + 1
-        end
-    end
-    
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("Sound") and not v:FindFirstChild("_Scanned") then
-            local id = v.SoundId or ""
-            local name = v.Name or "Unnamed"
-            local assetId = id:match("rbxassetid://(%d+)") or id:match("asset%?id=(%d+)") or id
-            if assetId == "" then assetId = "No ID" end
-            
-            local tag = Instance.new("BoolValue", v)
-            tag.Name = "_Scanned"; tag.Value = true
-            
-            table.insert(soundList, {
-                Name = name, AssetId = assetId, FullId = id,
-                IsPlaying = v.Playing or false, Volume = v.Volume or 0,
-                Looped = v.Looped or false, Parent = "Workspace",
-                Type = id:find("rbxasset") and "Music" or "Effect"
-            })
-            count = count + 1
-        end
-    end
-    
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v.Name == "_Scanned" then v:Destroy() end
-    end
-    
-    return soundList, count
-end
-
-local function CreateSoundListUI(parent)
-    SoundListFrame = Instance.new("Frame")
-    SoundListFrame.Size = UDim2.new(1, -8, 0, 220)
-    SoundListFrame.BackgroundColor3 = T.Bg2
-    SoundListFrame.BackgroundTransparency = 0.4
-    SoundListFrame.BorderSizePixel = 0
-    SoundListFrame.Parent = parent
-    Instance.new("UICorner", SoundListFrame).CornerRadius = UDim.new(0, 10)
-    
-    SoundListScrolling = Instance.new("ScrollingFrame")
-    SoundListScrolling.Size = UDim2.new(1, -8, 1, -8)
-    SoundListScrolling.Position = UDim2.new(0, 4, 0, 4)
-    SoundListScrolling.BackgroundTransparency = 1
-    SoundListScrolling.ScrollBarThickness = 3
-    SoundListScrolling.ScrollBarImageColor3 = T.Gold
-    SoundListScrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
-    SoundListScrolling.Parent = SoundListFrame
-    
-    SoundListLayout = Instance.new("UIListLayout", SoundListScrolling)
-    SoundListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SoundListLayout.Padding = UDim.new(0, 3)
-    SoundListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        SoundListScrolling.CanvasSize = UDim2.new(0, 0, 0, SoundListLayout.AbsoluteContentSize.Y + 10)
-    end)
-end
-
-local function UpdateSoundList(sounds)
-    for _, child in pairs(SoundListScrolling:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
-    end
-    
-    if #sounds == 0 then
-        local empty = Instance.new("TextLabel", SoundListScrolling)
-        empty.Size = UDim2.new(1, -8, 0, 30)
-        empty.BackgroundTransparency = 1
-        empty.Text = "No sounds found in this map!"
-        empty.TextColor3 = T.TextDim
-        empty.TextSize = 12
-        empty.Font = Enum.Font.Gotham
-        return
-    end
-    
-    for i, sound in pairs(sounds) do
-        local item = Instance.new("Frame")
-        item.Size = UDim2.new(1, -8, 0, 38)
-        item.BackgroundColor3 = T.Bg
-        item.BackgroundTransparency = 0.3
-        item.Parent = SoundListScrolling
-        Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
-        
-        local icon = Instance.new("TextLabel", item)
-        icon.Size = UDim2.new(0, 25, 1, 0)
-        icon.BackgroundTransparency = 1
-        icon.Text = sound.Type == "Music" and "🎵" or "🔊"
-        icon.TextColor3 = T.Gold
-        icon.TextSize = 14
-        icon.TextXAlignment = Enum.TextXAlignment.Center
-        
-        local nameLabel = Instance.new("TextLabel", item)
-        nameLabel.Size = UDim2.new(0, 150, 1, 0)
-        nameLabel.Position = UDim2.new(0, 30, 0, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = sound.Name
-        nameLabel.TextColor3 = T.Text
-        nameLabel.TextSize = 11
-        nameLabel.Font = Enum.Font.GothamBold
-        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-        
-        local idLabel = Instance.new("TextLabel", item)
-        idLabel.Size = UDim2.new(0, 130, 1, 0)
-        idLabel.Position = UDim2.new(0, 185, 0, 0)
-        idLabel.BackgroundTransparency = 1
-        idLabel.Text = sound.AssetId
-        idLabel.TextColor3 = T.PurpleL
-        idLabel.TextSize = 10
-        idLabel.Font = Enum.Font.Gotham
-        idLabel.TextXAlignment = Enum.TextXAlignment.Left
-        idLabel.TextTruncate = Enum.TextTruncate.AtEnd
-        
-        local status = Instance.new("TextLabel", item)
-        status.Size = UDim2.new(0, 50, 1, 0)
-        status.Position = UDim2.new(1, -55, 0, 0)
-        status.BackgroundTransparency = 1
-        status.Text = sound.IsPlaying and "▶️" or "⏹️"
-        status.TextColor3 = sound.IsPlaying and T.On or T.Off
-        status.TextSize = 12
-        status.TextXAlignment = Enum.TextXAlignment.Center
-        
-        local copyBtn = Instance.new("TextButton", item)
-        copyBtn.Size = UDim2.new(0, 35, 0, 28)
-        copyBtn.Position = UDim2.new(1, -92, 0.5, -14)
-        copyBtn.BackgroundColor3 = T.PurpleD
-        copyBtn.Text = "📋"
-        copyBtn.TextColor3 = T.White
-        copyBtn.TextSize = 12
-        copyBtn.Font = Enum.Font.GothamBold
-        copyBtn.ZIndex = 5
-        Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
-        
-        copyBtn.MouseButton1Click:Connect(function()
-            local text = sound.Name .. " | " .. sound.AssetId
-            if setclipboard then
-                setclipboard(text)
-                Notify("📋 Copied", "Copied: " .. text, 3)
-            else
-                Notify("❌ Error", "Clipboard not supported!", 2)
-            end
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                BackgroundColor3 = bg
+            }):Play()
         end)
+        return btn
     end
-    
-    SoundListScrolling.CanvasSize = UDim2.new(0, 0, 0, SoundListLayout.AbsoluteContentSize.Y + 10)
-end
 
-local function CopyAllSounds()
-    if #SoundData == 0 then
-        Notify("❌ Error", "No sounds found! Scan first.", 2)
-        return
-    end
-    
-    local text = "=== SOUND LIST ===\n"
-    text = text .. "Map: " .. game.Name .. " (" .. game.PlaceId .. ")\n"
-    text = text .. "Total: " .. #SoundData .. " sounds\n"
-    text = text .. "═══════════════════════\n\n"
-    
-    for i, sound in pairs(SoundData) do
-        text = text .. string.format("%d. %s | %s\n", i, sound.Name, sound.AssetId)
-        if sound.Type then
-            text = text .. "   Type: " .. sound.Type .. " | Parent: " .. sound.Parent .. "\n"
-        end
-        text = text .. "\n"
-    end
-    
-    text = text .. "═══════════════════════\n"
-    text = text .. "Exported: " .. os.date("%Y-%m-%d %H:%M:%S")
-    
-    if setclipboard then
-        setclipboard(text)
-        Notify("📋 Copied All", string.format("Copied %d sounds to clipboard!", #SoundData), 4)
-    else
-        Notify("❌ Error", "Clipboard not supported!", 2)
-    end
-    print(text)
-end
-
-local function SaveSoundsToFile()
-    if #SoundData == 0 then
-        Notify("❌ Error", "No sounds found! Scan first.", 2)
-        return
-    end
-    
-    if not writefileSupported then
-        Notify("❌ Error", "Writefile not supported! Use copy instead.", 2)
-        return
-    end
-    
-    local text = "=== SOUND LIST ===\n"
-    text = text .. "Map: " .. game.Name .. " (" .. game.PlaceId .. ")\n"
-    text = text .. "Total: " .. #SoundData .. " sounds\n"
-    text = text .. "═══════════════════════\n\n"
-    
-    for i, sound in pairs(SoundData) do
-        text = text .. string.format("%d. %s | %s\n", i, sound.Name, sound.AssetId)
-        text = text .. "   Type: " .. (sound.Type or "Unknown") .. " | Parent: " .. (sound.Parent or "Unknown") .. "\n"
-        if sound.Volume then
-            text = text .. "   Volume: " .. sound.Volume .. " | Looped: " .. tostring(sound.Looped) .. "\n"
-        end
-        text = text .. "\n"
-    end
-    
-    text = text .. "═══════════════════════\n"
-    text = text .. "Exported: " .. os.date("%Y-%m-%d %H:%M:%S")
-    
-    local filename = "SoundList_" .. game.PlaceId .. "_" .. os.time() .. ".txt"
-    local success, err = pcall(function()
-        writefile(filename, text)
+    makeBtn("[ COPY ALL SERVICES ]", 100, CONFIG.ThemeColor, Color3.fromRGB(0, 80, 60), function()
+        startCopy("all")
     end)
-    
-    if success then
-        Notify("💾 Saved", string.format("Saved to: %s\n%d sounds", filename, #SoundData), 4)
-        print("✅ SOUND LIST SAVED TO: " .. filename)
-    else
-        Notify("❌ Error", "Failed to save: " .. tostring(err), 3)
-    end
-end
 
-local function PreviewSound(soundIndex)
-    if #SoundData == 0 or not SoundData[soundIndex] then
-        Notify("❌ Error", "Sound not found!", 2)
-        return
-    end
-    
-    local sound = SoundData[soundIndex]
-    if sound.FullId == "" or sound.FullId == "No ID" then
-        Notify("❌ Error", "Invalid sound ID!", 2)
-        return
-    end
-    
-    local preview = Instance.new("Sound")
-    preview.SoundId = sound.FullId
-    preview.Volume = 0.5
-    preview.Looped = false
-    preview.Parent = SoundService
-    preview:Play()
-    
-    Notify("🎵 Playing", "Preview: " .. sound.Name, 3)
-    
-    task.delay(10, function()
-        if preview and preview.Parent then
-            preview:Stop()
-            preview:Destroy()
+    makeBtn("[ COPY WORKSPACE ONLY ]", 152, Color3.fromRGB(150, 255, 200), Color3.fromRGB(0, 50, 40), function()
+        startCopy("workspace")
+    end)
+
+    makeBtn("[ COPY WITH STREAMING BYPASS ]", 204, CONFIG.AccentColor, Color3.fromRGB(0, 50, 80), function()
+        if not isStreamingEnabled() then
+            toast("INFO", "Streaming not enabled, using normal copy", CONFIG.WarnColor)
+        end
+        startCopy("all", true)
+    end)
+
+    makeBtn("[ OPEN SAVE FOLDER ]", 256, CONFIG.WarnColor, Color3.fromRGB(50, 40, 0), function()
+        toast("INFO", "Files: " .. CONFIG.SaveFolder, CONFIG.WarnColor)
+        if API.setclipboard then
+            pcall(function() setclipboard(CONFIG.SaveFolder) end)
+            toast("COPIED", "Path copied", CONFIG.AccentColor)
         end
     end)
-end
 
-local function ScanAndDisplaySounds()
-    local sounds, count = ScanAllSounds()
-    SoundData = sounds
-    
-    if count == 0 then
-        Notify("🎵 Scan", "No sounds found in this map!", 3)
-        UpdateSoundList({})
-        return
-    end
-    
-    Notify("🎵 Scan", string.format("Found %d sound(s) in this map!", count), 4)
-    UpdateSoundList(sounds)
-    
-    for _, v in pairs(SoundListFrame.Parent:GetChildren()) do
-        if v:IsA("TextLabel") and v.Name == "SoundCount" then
-            v.Text = string.format("🎵 Found %d sounds", count)
+    local statusFrame = Instance.new("Frame")
+    statusFrame.Size = UDim2.new(1, 0, 0, 30)
+    statusFrame.Position = UDim2.new(0, 0, 1, -34)
+    statusFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    statusFrame.BorderSizePixel = 0
+    statusFrame.Parent = mainPage
+    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 6)
+
+    local statusDot = Instance.new("Frame")
+    statusDot.Size = UDim2.new(0, 8, 0, 8)
+    statusDot.Position = UDim2.new(0, 10, 0.5, -4)
+    statusDot.BackgroundColor3 = CONFIG.ThemeColor
+    statusDot.BorderSizePixel = 0
+    statusDot.Parent = statusFrame
+    Instance.new("UICorner", statusDot).CornerRadius = UDim.new(1, 0)
+
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(1, -30, 1, 0)
+    statusText.Position = UDim2.new(0, 25, 0, 0)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "Ready_"
+    statusText.TextColor3 = CONFIG.ThemeColor
+    statusText.Font = CONFIG.Font
+    statusText.TextSize = 11
+    statusText.TextXAlignment = Enum.TextXAlignment.Left
+    statusText.Parent = statusFrame
+
+    refs.statusText = statusText
+    refs.statusDot = statusDot
+
+    -- ============================================
+    -- TAB: CONSOLE
+    -- ============================================
+    local consolePage = tabPages["CONSOLE"]
+
+    local consoleFrame = Instance.new("ScrollingFrame")
+    consoleFrame.Size = UDim2.new(1, 0, 1, -40)
+    consoleFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
+    consoleFrame.BorderSizePixel = 0
+    consoleFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    consoleFrame.ScrollBarThickness = 4
+    consoleFrame.ScrollBarImageColor3 = CONFIG.ThemeColor
+    consoleFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    consoleFrame.Parent = consolePage
+
+    local cl = Instance.new("UIListLayout")
+    cl.Padding = UDim.new(0, 2)
+    cl.SortOrder = Enum.SortOrder.LayoutOrder
+    cl.Parent = consoleFrame
+
+    local consolePad = Instance.new("UIPadding")
+    consolePad.PaddingLeft = UDim.new(0, 8)
+    consolePad.PaddingTop = UDim.new(0, 4)
+    consolePad.PaddingRight = UDim.new(0, 8)
+    consolePad.Parent = consoleFrame
+
+    local consoleLines = {}
+    local function addConsoleLine(text, color)
+        color = color or Color3.fromRGB(150, 255, 150)
+        local l = Instance.new("TextLabel")
+        l.Size = UDim2.new(1, 0, 0, 14)
+        l.BackgroundTransparency = 1
+        l.Text = text
+        l.TextColor3 = color
+        l.Font = CONFIG.Font
+        l.TextSize = 10
+        l.TextXAlignment = Enum.TextXAlignment.Left
+        l.Parent = consoleFrame
+        table.insert(consoleLines, l)
+        if #consoleLines > 200 then
+            local old = table.remove(consoleLines, 1)
+            if old then old:Destroy() end
         end
-    end
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🎣 FISH IT AUTO
--- ═══════════════════════════════════════════════════════════════════════════
-
-local FishItFeatures = {AutoClick = false, AutoSkip = false, AutoReel = false, AutoCollect = false, _clickCount = 0, _lastClick = 0}
-
-local function IsFishItGame()
-    if game.PlaceId == 1127761439 or game.PlaceId == 3194085475 then return true end
-    if game.Name and game.Name:lower():find("fish") then return true end
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("Part") and (v.Name:lower():find("fish") or v.Name:lower():find("rod") or v.Name:lower():find("bait")) then
-            return true
-        end
-    end
-    return false
-end
-
-local function FishItAutoClick()
-    spawn(function()
-        while FishItFeatures.AutoClick and SG.Parent do
-            pcall(function()
-                SimulateClick()
-                if LP.Character then
-                    local tool = LP.Character:FindFirstChildOfClass("Tool")
-                    if tool then pcall(function() tool:Activate() end) end
-                end
-                for _, v in pairs(CoreGui:GetDescendants()) do
-                    if v:IsA("TextButton") or v:IsA("ImageButton") then
-                        local text = (v.Text or v.Name or ""):lower()
-                        if text:find("cast") or text:find("reel") or text:find("fish") or text:find("catch") then
-                            pcall(function() v:Activate() end)
-                            pcall(function() v:Click() end)
-                            fireclickdetector(v)
-                        end
-                    end
-                end
-                FishItFeatures._clickCount = FishItFeatures._clickCount + 1
-                FishItFeatures._lastClick = tick()
-            end)
-            wait(0.15)
-        end
-    end)
-end
-
-local function FishItAutoSkip()
-    spawn(function()
-        while FishItFeatures.AutoSkip and SG.Parent do
-            pcall(function()
-                for _, v in pairs(Workspace:GetDescendants()) do
-                    if v:IsA("AnimationTrack") or v:IsA("Animator") then
-                        pcall(function()
-                            if v:IsA("AnimationTrack") then v:AdjustSpeed(50) end
-                        end)
-                    end
-                    if v:IsA("ParticleEmitter") or v:IsA("Fire") or v:IsA("Smoke") then
-                        if v.Parent and v.Parent:FindFirstChild("Humanoid") then
-                            pcall(function() v.Enabled = false end)
-                        end
-                    end
-                end
-                if LP.Character then
-                    local hum = LP.Character:FindFirstChild("Humanoid")
-                    if hum then
-                        for _, anim in pairs(hum.Animator:GetPlayingAnimationTracks()) do
-                            pcall(function() anim:Stop() end)
-                            pcall(function() anim:Destroy() end)
-                        end
-                    end
-                end
-            end)
-            wait(0.05)
-        end
-    end)
-end
-
-local function FishItAutoReel()
-    spawn(function()
-        while FishItFeatures.AutoReel and SG.Parent do
-            pcall(function()
-                for _, v in pairs(CoreGui:GetDescendants()) do
-                    if v:IsA("Frame") or v:IsA("ImageLabel") then
-                        if v.Name:lower():find("progress") or v.Name:lower():find("bar") then
-                            if v.Size.X.Scale > 0.3 then SimulateClick() end
-                        end
-                    end
-                    if v:IsA("TextButton") or v:IsA("ImageButton") then
-                        local text = (v.Text or v.Name or ""):lower()
-                        if text:find("reel") or text:find("catch") or text:find("pull") then
-                            pcall(function() v:Activate() end)
-                            pcall(function() v:Click() end)
-                            fireclickdetector(v)
-                        end
-                    end
-                end
-            end)
-            wait(0.1)
-        end
-    end)
-end
-
-local function FishItAutoCollect()
-    spawn(function()
-        while FishItFeatures.AutoCollect and SG.Parent do
-            pcall(function()
-                SimulateClick()
-                for _, v in pairs(CoreGui:GetDescendants()) do
-                    if v:IsA("TextButton") or v:IsA("ImageButton") then
-                        local text = (v.Text or v.Name or ""):lower()
-                        if text:find("collect") or text:find("claim") or text:find("get") or text:find("receive") then
-                            pcall(function() v:Activate() end)
-                            pcall(function() v:Click() end)
-                            fireclickdetector(v)
-                        end
-                    end
-                end
-                for _, v in pairs(Workspace:GetDescendants()) do
-                    if v:IsA("Part") and v.Name:lower():find("fish") and LP.Character then
-                        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            local dist = (hrp.Position - v.Position).Magnitude
-                            if dist < 20 then
-                                hrp.CFrame = v.CFrame * CFrame.new(0, 2, 2)
-                                wait(0.2)
-                                SimulateClick()
-                            end
-                        end
-                    end
-                end
-            end)
-            wait(0.5)
-        end
-    end)
-end
-
-local function FishItAutoAll()
-    FishItFeatures.AutoClick = true; FishItFeatures.AutoSkip = true
-    FishItFeatures.AutoReel = true; FishItFeatures.AutoCollect = true
-    FishItAutoClick(); FishItAutoSkip(); FishItAutoReel(); FishItAutoCollect()
-    Notify("🎣 Fish It", "All features activated!\nAuto Cast + Auto Skip + Auto Reel + Auto Collect", 4)
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🌾 AUTO FARM
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function FindNearestEnemy(range)
-    local nearest, nearestDist = nil, range or 100
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("BasePart") and v.Parent and not Players:GetPlayerFromCharacter(v.Parent) then
-            if v:FindFirstChildOfClass("Humanoid") or 
-               v.Name:lower():find("enemy") or v.Name:lower():find("boss") or 
-               v.Name:lower():find("mob") or v.Name:lower():find("npc") then
-                if LP.Character then
-                    local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        local dist = (hrp.Position - v.Position).Magnitude
-                        if dist < nearestDist then
-                            nearestDist = dist
-                            nearest = v
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return nearest, nearestDist
-end
-
-local function AutoFarmGeneral()
-    spawn(function()
-        while Config.AutoFarm and SG.Parent do
-            pcall(function()
-                local target, dist = FindNearestEnemy(Config.AutoFarmRange)
-                if target then
-                    if Config.AutoFarmTP then
-                        local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            hrp.CFrame = target.CFrame * CFrame.new(0, 3, 3)
-                        end
-                    end
-                    
-                    SimulateClick()
-                    if LP.Character then
-                        local tool = LP.Character:FindFirstChildOfClass("Tool")
-                        if tool then pcall(function() tool:Activate() end) end
-                    end
-                    wait(Config.AutoFarmDelay or 0.5)
-                end
-            end)
-            wait(0.5)
-        end
-    end)
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🛡️ ANTI AFK
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function StartAntiAFK()
-    if AntiAFKActive then return end
-    AntiAFKActive = true
-    
-    spawn(function()
-        local vu = game:GetService("VirtualUser")
-        while AntiAFKActive and SG.Parent do
-            pcall(function()
-                if vu then vu:CaptureController(); vu:ClickButton2(Vector2.new()) end
-                if LP.Character then
-                    local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        local pos = hrp.Position
-                        hrp.CFrame = CFrame.new(pos + Vector3.new(0.01, 0, 0.01))
-                        wait(0.05)
-                        hrp.CFrame = CFrame.new(pos)
-                    end
-                    SimulateClick()
-                end
-                UserInputService:SetMouseButtonEnabled(Enum.UserInputType.MouseButton1, true)
-                wait(0.05)
-                UserInputService:SetMouseButtonEnabled(Enum.UserInputType.MouseButton1, false)
-            end)
-            wait(30)
-        end
-    end)
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🔄 AUTO REJOIN
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function AutoRejoin()
-    if RejoinActive then return end
-    RejoinActive = true
-    
-    spawn(function()
-        while Config.AutoRejoin and SG.Parent do
-            pcall(function()
-                local ping = 0
-                pcall(function() ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue() end)
-                if ping == 0 then
-                    Notify("🔄 Rejoin", "Disconnected! Rejoining...", 3)
-                    Config.RejoinCount = Config.RejoinCount + 1
-                    TeleportService:Teleport(game.PlaceId, LP)
-                    wait(5)
-                    if Config.AutoExecute and Config.ScriptCode ~= "" then
-                        wait(3)
-                        Notify("🔄 Execute", "Re-executing script...", 2)
-                        loadstring(Config.ScriptCode)()
-                    end
-                end
-            end)
-            wait(5)
-        end
-    end)
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 📋 AUTO CLEAR QUEST
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function AutoClearQuest()
-    spawn(function()
-        while Config.AutoClearQuest and SG.Parent do
-            pcall(function()
-                local questKeywords = {"quest", "complete", "claim", "clear", "finish", "done", "submit", "task", "mission"}
-                for _, v in pairs(CoreGui:GetDescendants()) do
-                    if v:IsA("TextButton") or v:IsA("ImageButton") then
-                        local text = (v.Text or v.Name or ""):lower()
-                        for _, kw in pairs(questKeywords) do
-                            if text:find(kw) then
-                                pcall(function() v:Activate() end)
-                                pcall(function() v:Click() end)
-                                fireclickdetector(v)
-                                Config.QuestCleared = Config.QuestCleared + 1
-                                wait(0.3)
-                                break
-                            end
-                        end
-                    end
-                end
-                for _, v in pairs(Workspace:GetDescendants()) do
-                    if v:IsA("BasePart") and (v.Name:lower():find("quest") or v.Name:lower():find("complete") or v.Name:lower():find("finish")) then
-                        if LP.Character then
-                            local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
-                            if hrp then
-                                hrp.CFrame = v.CFrame * CFrame.new(0, 3, 3)
-                                wait(0.3)
-                                SimulateClick()
-                            end
-                        end
-                    end
-                end
-            end)
-            wait(1.5)
-        end
-    end)
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- ⌨️ KEYBINDS
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function ToggleFly()
-    Config.Fly = not Config.Fly; flying = Config.Fly
-    if flying then
-        local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            flyBV = Instance.new("BodyVelocity", hrp)
-            flyBV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-            flyBV.Velocity = Vector3.zero
-            flyBG = Instance.new("BodyGyro", hrp)
-            flyBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-            flyBG.P = 9e4
-            flyBG.CFrame = Cam.CFrame
-            Notify("✈️ Fly", "ON! (Press F again to toggle)", 2)
-        end
-    else
-        if flyBV then flyBV:Destroy(); flyBV = nil end
-        if flyBG then flyBG:Destroy(); flyBG = nil end
-        Notify("✈️ Fly", "OFF!", 2)
-    end
-end
-
-local function ToggleNoclip()
-    Config.Noclip = not Config.Noclip
-    Notify("🚫 Noclip", Config.Noclip and "ON! (Press N again to toggle)" or "OFF!", 2)
-end
-
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if input.KeyCode == Enum.KeyCode.F then ToggleFly() end
-    if input.KeyCode == Enum.KeyCode.N then ToggleNoclip() end
-    if input.KeyCode == Enum.KeyCode.E then Config.ClickTP = true end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.E then Config.ClickTP = false end
-end)
-
-UserInputService.JumpRequest:Connect(function()
-    if Config.InfiniteJump then
-        local hum = LP.Character and LP.Character:FindFirstChild("Humanoid")
-        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-    end
-end)
-
-Mouse.Button1Down:Connect(function()
-    if Config.ClickTP then
-        local char = LP.Character
-        if char then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
-                Notify("📍 Click TP", "Teleported to click position!", 2)
-            end
-        end
-    end
-    if Config.ClickDelete then
-        local tgt = Mouse.Target
-        if tgt and not Players:GetPlayerFromCharacter(tgt.Parent) then
-            tgt:Destroy()
-            Notify("🗑️ Delete", "Part deleted!", 2)
-        end
-    end
-end)
-
--- ═══ CHARACTER ADDED ═══
-LP.CharacterAdded:Connect(function(char)
-    wait(0.5)
-    local hum = char:FindFirstChild("Humanoid")
-    if hum then
-        hum.WalkSpeed = Config.Speed
-        hum.JumpPower = Config.JumpPower
-    end
-    if Config.GodMode then
-        spawn(function()
-            while Config.GodMode and LP.Character do
-                local hum = LP.Character:FindFirstChild("Humanoid")
-                if hum then hum.Health = hum.MaxHealth end
-                wait(0.1)
-            end
+        task.defer(function()
+            consoleFrame.CanvasPosition = Vector2.new(0, math.huge)
         end)
     end
-    if Config.KillAura then
-        spawn(function()
-            while Config.KillAura and SG.Parent do
-                local char = LP.Character
-                if char then
-                    local hrp = char:FindFirstChild("HumanoidRootPart")
-                    local tool = char:FindFirstChildOfClass("Tool")
-                    if hrp then
-                        for _, p in pairs(Players:GetPlayers()) do
-                            if p ~= LP and p.Character then
-                                local targetHrp = p.Character:FindFirstChild("HumanoidRootPart")
-                                if targetHrp then
-                                    local dist = (hrp.Position - targetHrp.Position).Magnitude
-                                    if dist <= Config.KillAuraRange then
-                                        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, -2)
-                                        if tool then pcall(function() tool:Activate() end) end
-                                        break
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                wait(0.1)
-            end
+
+    refs.addConsole = addConsoleLine
+
+    local clearBtn = Instance.new("TextButton")
+    clearBtn.Size = UDim2.new(0.3, -2, 0, 30)
+    clearBtn.Position = UDim2.new(0.7, 2, 1, -34)
+    clearBtn.BackgroundColor3 = Color3.fromRGB(50, 20, 20)
+    clearBtn.Text = "CLEAR"
+    clearBtn.TextColor3 = CONFIG.DangerColor
+    clearBtn.Font = CONFIG.Font
+    clearBtn.TextSize = 11
+    clearBtn.BorderSizePixel = 0
+    clearBtn.Parent = consolePage
+    Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0, 6)
+    clearBtn.MouseButton1Click:Connect(function()
+        for _, l in ipairs(consoleLines) do l:Destroy() end
+        consoleLines = {}
+    end)
+
+    local exportBtn = Instance.new("TextButton")
+    exportBtn.Size = UDim2.new(0.7, -2, 0, 30)
+    exportBtn.Position = UDim2.new(0, 0, 1, -34)
+    exportBtn.BackgroundColor3 = Color3.fromRGB(0, 50, 80)
+    exportBtn.Text = "EXPORT LOG"
+    exportBtn.TextColor3 = CONFIG.AccentColor
+    exportBtn.Font = CONFIG.Font
+    exportBtn.TextSize = 11
+    exportBtn.BorderSizePixel = 0
+    exportBtn.Parent = consolePage
+    Instance.new("UICorner", exportBtn).CornerRadius = UDim.new(0, 6)
+    exportBtn.MouseButton1Click:Connect(function()
+        if API.writefile then
+            local txt = table.concat(LogBuffer, "\n")
+            local fn = CONFIG.SaveFolder .. "/console_" .. os.date("%Y%m%d_%H%M%S") .. ".txt"
+            pcall(function() writefile(fn, txt) end)
+            toast("EXPORTED", fn, CONFIG.AccentColor)
+        end
+    end)
+
+    -- ============================================
+    -- TAB: STATS
+    -- ============================================
+    local statsPage = tabPages["STATS"]
+
+    local statLabels = {}
+    local statNames = {"FPS", "Ping", "Memory (Lua)", "Instance Count", "Player Count", "Streaming Mode"}
+    for i, name in ipairs(statNames) do
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 36)
+        row.Position = UDim2.new(0, 0, 0, (i-1) * 40)
+        row.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        row.BorderSizePixel = 0
+        row.Parent = statsPage
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0.5, -10, 1, 0)
+        lbl.Position = UDim2.new(0, 10, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = name
+        lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+        lbl.Font = CONFIG.Font
+        lbl.TextSize = 11
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = row
+
+        local val = Instance.new("TextLabel")
+        val.Size = UDim2.new(0.5, -10, 1, 0)
+        val.Position = UDim2.new(0.5, 0, 0, 0)
+        val.BackgroundTransparency = 1
+        val.Text = "---"
+        val.TextColor3 = CONFIG.ThemeColor
+        val.Font = CONFIG.Font
+        val.TextSize = 12
+        val.TextXAlignment = Enum.TextXAlignment.Right
+        val.Parent = row
+
+        statLabels[name] = val
+    end
+
+    task.spawn(function()
+        while mainGui and mainGui.Parent do
+            task.wait(0.5)
+            pcall(function()
+                statLabels["FPS"].Text = tostring(math.floor(1/RunService.RenderStepped:Wait()))
+            end)
+            pcall(function()
+                statLabels["Ping"].Text = tostring(math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())) .. " ms"
+            end)
+            pcall(function()
+                statLabels["Memory (Lua)"].Text = formatBytes(math.floor(Stats:GetTotalMemoryUsageMb() * 1024 * 1024))
+            end)
+            pcall(function()
+                local count = 0
+                for _ in game:GetDescendants() do count = count + 1 end
+                statLabels["Instance Count"].Text = tostring(count)
+            end)
+            pcall(function()
+                statLabels["Player Count"].Text = tostring(#Players:GetPlayers())
+            end)
+            pcall(function()
+                statLabels["Streaming Mode"].Text = isStreamingEnabled() and "ENABLED" or "DISABLED"
+            end)
+        end
+    end)
+
+    -- ============================================
+    -- TAB: SETTINGS
+    -- ============================================
+    local settingsPage = tabPages["SETTINGS"]
+
+    local function makeSetting(name, y, initial, onChange)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 38)
+        row.Position = UDim2.new(0, 0, 0, y)
+        row.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        row.BorderSizePixel = 0
+        row.Parent = settingsPage
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0.6, -10, 1, 0)
+        lbl.Position = UDim2.new(0, 10, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = name
+        lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+        lbl.Font = CONFIG.Font
+        lbl.TextSize = 11
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = row
+
+        local toggle = Instance.new("TextButton")
+        toggle.Size = UDim2.new(0, 60, 0, 24)
+        toggle.Position = UDim2.new(1, -70, 0.5, -12)
+        toggle.BackgroundColor3 = initial and Color3.fromRGB(0, 80, 60) or Color3.fromRGB(50, 20, 20)
+        toggle.Text = initial and "ON" or "OFF"
+        toggle.TextColor3 = initial and CONFIG.ThemeColor or CONFIG.DangerColor
+        toggle.Font = CONFIG.Font
+        toggle.TextSize = 11
+        toggle.BorderSizePixel = 0
+        toggle.Parent = row
+        Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 6)
+
+        local state = initial
+        toggle.MouseButton1Click:Connect(function()
+            state = not state
+            toggle.BackgroundColor3 = state and Color3.fromRGB(0, 80, 60) or Color3.fromRGB(50, 20, 20)
+            toggle.TextColor3 = state and CONFIG.ThemeColor or CONFIG.DangerColor
+            toggle.Text = state and "ON" or "OFF"
+            onChange(state)
         end)
     end
-end)
 
--- ═══════════════════════════════════════════════════════════════════════════
--- 🏠 CREATE TABS
--- ═══════════════════════════════════════════════════════════════════════════
+    makeSetting("Anti-Detection Stealth", 0, CONFIG.AntiDetection, function(v)
+        CONFIG.AntiDetection = v
+        if v then applyStealth() end
+        saveConfig()
+    end)
 
--- HOME TAB
-local HTab = CreateTab("Home", "🏠")
-Tabs["Home"].Content.Visible = true
-Tabs["Home"].Button.BackgroundColor3 = T.Gold
-Tabs["Home"].Button.BackgroundTransparency = 0.15
-Tabs["Home"].Button.TextColor3 = T.White
+    makeSetting("Anti-Streaming Bypass", 42, CONFIG.AntiStreaming, function(v)
+        CONFIG.AntiStreaming = v
+        saveConfig()
+    end)
 
-Sec(HTab, "Welcome")
-local WL = Instance.new("TextLabel")
-WL.Size = UDim2.new(1, -8, 0, 60)
-WL.BackgroundColor3 = T.Bg2
-WL.BackgroundTransparency = 0.3
-WL.Text = "✦ Welcome " .. LP.Name .. "!\n✨ ETERNITY PREMIUM ULTIMATE v7\n💎 230+ Features • All Fixed!\n🗺️ Copy Map • 🎵 Sound ID • 🌾 Auto Farm"
-WL.TextColor3 = T.Text
-WL.TextSize = 11
-WL.Font = Enum.Font.Gotham
-WL.TextWrapped = true
-WL.Parent = HTab
-Instance.new("UICorner", WL).CornerRadius = UDim.new(0, 10)
+    makeSetting("Matrix Background", 84, MATRIX_ENABLED, function(v)
+        MATRIX_ENABLED = v
+        matrixBg.Visible = v
+    end)
 
-Sec(HTab, "Quick Actions")
-Btn(HTab, "🔄 Rejoin Server", function() TeleportService:Teleport(game.PlaceId, LP) end)
-Btn(HTab, "🌐 Server Hop", function()
-    pcall(function()
-        local s = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-        for _, v in pairs(s.data) do
-            if v.id ~= game.JobId then
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, LP)
-                break
-            end
+    makeSetting("Log to File", 126, CONFIG.LogToFile, function(v)
+        CONFIG.LogToFile = v
+        saveConfig()
+    end)
+
+    -- Max Depth slider
+    local depthRow = Instance.new("Frame")
+    depthRow.Size = UDim2.new(1, 0, 0, 50)
+    depthRow.Position = UDim2.new(0, 0, 0, 168)
+    depthRow.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    depthRow.BorderSizePixel = 0
+    depthRow.Parent = settingsPage
+    Instance.new("UICorner", depthRow).CornerRadius = UDim.new(0, 6)
+
+    local depthLbl = Instance.new("TextLabel")
+    depthLbl.Size = UDim2.new(1, -20, 0, 18)
+    depthLbl.Position = UDim2.new(0, 10, 0, 5)
+    depthLbl.BackgroundTransparency = 1
+    depthLbl.Text = "Max Depth: " .. CONFIG.MaxDepth
+    depthLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+    depthLbl.Font = CONFIG.Font
+    depthLbl.TextSize = 11
+    depthLbl.TextXAlignment = Enum.TextXAlignment.Left
+    depthLbl.Parent = depthRow
+
+    local depthBar = Instance.new("Frame")
+    depthBar.Size = UDim2.new(0.9, 0, 0, 6)
+    depthBar.Position = UDim2.new(0.05, 0, 0, 32)
+    depthBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    depthBar.BorderSizePixel = 0
+    depthBar.Parent = depthRow
+    Instance.new("UICorner", depthBar).CornerRadius = UDim.new(1, 0)
+
+    local depthFill = Instance.new("Frame")
+    depthFill.Size = UDim2.new(CONFIG.MaxDepth / 20, 0, 1, 0)
+    depthFill.BackgroundColor3 = CONFIG.ThemeColor
+    depthFill.BorderSizePixel = 0
+    depthFill.Parent = depthBar
+    Instance.new("UICorner", depthFill).CornerRadius = UDim.new(1, 0)
+
+    local depthBtn = Instance.new("TextButton")
+    depthBtn.Size = UDim2.new(1, -20, 0, 14)
+    depthBtn.Position = UDim2.new(0, 10, 0, 22)
+    depthBtn.BackgroundTransparency = 1
+    depthBtn.Text = ""
+    depthBtn.Parent = depthRow
+    depthBtn.MouseButton1Click:Connect(function()
+        local pos = UserInputService:GetMouseLocation().X
+        local abs = depthBar.AbsolutePosition.X
+        local size = depthBar.AbsoluteSize.X
+        local pct = math.clamp((pos - abs) / size, 0, 1)
+        CONFIG.MaxDepth = math.floor(pct * 20) + 1
+        depthFill.Size = UDim2.new(pct, 0, 1, 0)
+        depthLbl.Text = "Max Depth: " .. CONFIG.MaxDepth
+        saveConfig()
+    end)
+
+    -- Stream Radius slider
+    local srRow = Instance.new("Frame")
+    srRow.Size = UDim2.new(1, 0, 0, 50)
+    srRow.Position = UDim2.new(0, 0, 0, 222)
+    srRow.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    srRow.BorderSizePixel = 0
+    srRow.Parent = settingsPage
+    Instance.new("UICorner", srRow).CornerRadius = UDim.new(0, 6)
+
+    local srLbl = Instance.new("TextLabel")
+    srLbl.Size = UDim2.new(1, -20, 0, 18)
+    srLbl.Position = UDim2.new(0, 10, 0, 5)
+    srLbl.BackgroundTransparency = 1
+    srLbl.Text = "Stream Radius: " .. CONFIG.StreamRadius .. " studs"
+    srLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+    srLbl.Font = CONFIG.Font
+    srLbl.TextSize = 11
+    srLbl.TextXAlignment = Enum.TextXAlignment.Left
+    srLbl.Parent = srRow
+
+    local srBar = Instance.new("Frame")
+    srBar.Size = UDim2.new(0.9, 0, 0, 6)
+    srBar.Position = UDim2.new(0.05, 0, 0, 32)
+    srBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    srBar.BorderSizePixel = 0
+    srBar.Parent = srRow
+    Instance.new("UICorner", srBar).CornerRadius = UDim.new(1, 0)
+
+    local srFill = Instance.new("Frame")
+    srFill.Size = UDim2.new(CONFIG.StreamRadius / 5000, 0, 1, 0)
+    srFill.BackgroundColor3 = CONFIG.AccentColor
+    srFill.BorderSizePixel = 0
+    srFill.Parent = srBar
+    Instance.new("UICorner", srFill).CornerRadius = UDim.new(1, 0)
+
+    local srBtn = Instance.new("TextButton")
+    srBtn.Size = UDim2.new(1, -20, 0, 14)
+    srBtn.Position = UDim2.new(0, 10, 0, 22)
+    srBtn.BackgroundTransparency = 1
+    srBtn.Text = ""
+    srBtn.Parent = srRow
+    srBtn.MouseButton1Click:Connect(function()
+        local pos = UserInputService:GetMouseLocation().X
+        local abs = srBar.AbsolutePosition.X
+        local size = srBar.AbsoluteSize.X
+        local pct = math.clamp((pos - abs) / size, 0, 1)
+        CONFIG.StreamRadius = math.floor(pct * 5000 / 100) * 100
+        srFill.Size = UDim2.new(pct, 0, 1, 0)
+        srLbl.Text = "Stream Radius: " .. CONFIG.StreamRadius .. " studs"
+        saveConfig()
+    end)
+
+    -- ============================================
+    -- KEYBOARD SHORTCUTS
+    -- ============================================
+    UserInputService.InputBegan:Connect(function(input, gp)
+        if gp then return end
+        if input.KeyCode == Enum.KeyCode.H and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            window.Visible = not window.Visible
+        elseif input.KeyCode == Enum.KeyCode.S and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            startCopy("all")
+        elseif input.KeyCode == Enum.KeyCode.Escape then
+            if activeTab ~= "MAIN" then switchTab("MAIN") end
         end
     end)
-end)
-Btn(HTab, "📊 Game Info", function()
-    Notify("Info", "Place: " .. game.PlaceId .. "\nPlayers: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers .. "\nJobId: " .. string.sub(game.JobId, 1, 12) .. "...", 5)
-end)
-Btn(HTab, "🖱️ Test Click", function()
-    SimulateClick()
-    Notify("🖱️ Click", "Click simulated! (Check if it works)", 3)
-end)
 
--- ═══ MAP TOOLS TAB ═══
-local MTab = CreateTab("Map Tools", "🗺️")
+    switchTab("MAIN")
+    initToasts(mainGui)
 
-Sec(MTab, "📦 Map Copy")
-Btn(MTab, "📦 Copy Entire Map", function()
-    CopyMap()
-end)
+    window.BackgroundTransparency = 1
+    TweenService:Create(window, TweenInfo.new(0.3), {
+        BackgroundTransparency = 0.05
+    }):Play()
 
-Btn(MTab, "💾 Save Map to File", function()
-    SaveMapToFile()
-end)
+    toast("SYSTEM READY", "Executed at " .. os.date("%H:%M:%S"), CONFIG.ThemeColor)
+    addConsoleLine(string.format("[%s] [INFO] System initialized v3.1", os.date("%H:%M:%S")))
+    addConsoleLine(string.format("[%s] [INFO] Executor: %s", os.date("%H:%M:%S"), executorName))
+    addConsoleLine(string.format("[%s] [INFO] Streaming: %s", os.date("%H:%M:%S"), isStreamingEnabled() and "ENABLED" or "DISABLED"))
 
-Btn(MTab, "📂 Load Map from File", function()
-    LoadMapFromFile()
-end)
+    refs.window = window
+end
 
-Btn(MTab, "📁 List Saved Files", function()
-    ListSavedFiles()
-end)
-
-Btn(MTab, "📋 View Copied Data", function()
-    ViewCopiedData()
-end)
-
-Btn(MTab, "🗑️ Clear Copied Data", function()
-    ClearCopiedData()
-end)
-
-Btn(MTab, "📊 Count Map Objects", function()
-    CountMapObjects()
-end)
-
-Sec(MTab, "ℹ️ Info")
-local MapInfo = Instance.new("TextLabel")
-MapInfo.Size = UDim2.new(1, -8, 0, 50)
-MapInfo.BackgroundColor3 = T.Bg2
-MapInfo.BackgroundTransparency = 0.3
-MapInfo.Text = "🗺️ Map Copy Features\n✅ Copy Entire Map (Workspace, Lighting, SoundService, etc)\n✅ Progress Bar with status\n✅ Save to File (JSON format)\n✅ Load from File\n✅ View copied data"
-MapInfo.TextColor3 = T.Text
-MapInfo.TextSize = 11
-MapInfo.Font = Enum.Font.Gotham
-MapInfo.TextWrapped = true
-MapInfo.Parent = MTab
-Instance.new("UICorner", MapInfo).CornerRadius = UDim.new(0, 10)
-
--- ═══ SOUND TAB ═══
-local SoundTab = CreateTab("Sound", "🎵")
-
-Sec(SoundTab, "🎵 Sound ID Detector")
-Btn(SoundTab, "🔍 Scan All Sounds", function()
-    ScanAndDisplaySounds()
-end)
-
-local SoundCount = Instance.new("TextLabel")
-SoundCount.Name = "SoundCount"
-SoundCount.Size = UDim2.new(1, -8, 0, 25)
-SoundCount.BackgroundTransparency = 1
-SoundCount.Text = "🎵 Click 'Scan All Sounds' to detect"
-SoundCount.TextColor3 = T.TextDim
-SoundCount.TextSize = 11
-SoundCount.Font = Enum.Font.Gotham
-SoundCount.TextXAlignment = Enum.TextXAlignment.Left
-SoundCount.Parent = SoundTab
-
-CreateSoundListUI(SoundTab)
-
-Sec(SoundTab, "⚡ Actions")
-Btn(SoundTab, "📋 Copy All Sounds", function() CopyAllSounds() end)
-Btn(SoundTab, "💾 Save to File", function() SaveSoundsToFile() end)
-Btn(SoundTab, "🔊 Preview Sound", function()
-    local num = tonumber(prompt("Enter sound number to preview (1-" .. #SoundData .. "):"))
-    if num and num >= 1 and num <= #SoundData then
-        PreviewSound(num)
-    else
-        Notify("❌ Error", "Invalid sound number!", 2)
+-- ============================================
+-- STATUS UPDATER
+-- ============================================
+local function updateStatus(text, color)
+    if refs.statusText then
+        refs.statusText.Text = text
+        refs.statusText.TextColor3 = color or CONFIG.ThemeColor
     end
-end)
-Btn(SoundTab, "🔍 Find Sound by Name", function()
-    local search = prompt("Enter sound name to search:")
-    if search and search ~= "" then
-        local found = {}
-        for i, sound in pairs(SoundData) do
-            if sound.Name:lower():find(search:lower()) then
-                table.insert(found, string.format("%d. %s | %s", i, sound.Name, sound.AssetId))
-            end
-        end
-        if #found > 0 then
-            Notify("🔍 Found", table.concat(found, "\n"), 5)
-        else
-            Notify("🔍 Found", "No sounds found matching: " .. search, 3)
-        end
+    if refs.statusDot then
+        refs.statusDot.BackgroundColor3 = color or CONFIG.ThemeColor
     end
-end)
-
-Sec(SoundTab, "ℹ️ Info")
-local SoundInfo = Instance.new("TextLabel")
-SoundInfo.Size = UDim2.new(1, -8, 0, 50)
-SoundInfo.BackgroundColor3 = T.Bg2
-SoundInfo.BackgroundTransparency = 0.3
-SoundInfo.Text = "🎵 Sound ID Detector\n✅ Scan all sounds in map\n✅ Copy individual or all sounds\n✅ Save to file (if supported)\n✅ Preview sounds"
-SoundInfo.TextColor3 = T.Text
-SoundInfo.TextSize = 11
-SoundInfo.Font = Enum.Font.Gotham
-SoundInfo.TextWrapped = true
-SoundInfo.Parent = SoundTab
-Instance.new("UICorner", SoundInfo).CornerRadius = UDim.new(0, 10)
-
--- ═══ FISH IT TAB ═══
-local FTab = CreateTab("Fish It", "🎣")
-Sec(FTab, "🎣 Fish It Auto Features")
-Tog(FTab, "🖱️ Auto Cast (Click)", false, function(s)
-    FishItFeatures.AutoClick = s
-    if s then Notify("🎣 Auto Cast", "ON! (6-7 clicks/sec)", 2); FishItAutoClick() else Notify("🎣 Auto Cast", "OFF!", 2) end
-end)
-Tog(FTab, "⏭️ Auto Skip Animation", false, function(s)
-    FishItFeatures.AutoSkip = s
-    if s then Notify("🎣 Skip Anim", "ON! (Skip fishing animation)", 2); FishItAutoSkip() else Notify("🎣 Skip Anim", "OFF!", 2) end
-end)
-Tog(FTab, "🎯 Auto Reel", false, function(s)
-    FishItFeatures.AutoReel = s
-    if s then Notify("🎣 Auto Reel", "ON! (Auto reel fish)", 2); FishItAutoReel() else Notify("🎣 Auto Reel", "OFF!", 2) end
-end)
-Tog(FTab, "📦 Auto Collect", false, function(s)
-    FishItFeatures.AutoCollect = s
-    if s then Notify("🎣 Auto Collect", "ON! (Auto collect fish)", 2); FishItAutoCollect() else Notify("🎣 Auto Collect", "OFF!", 2) end
-end)
-
-Sec(FTab, "⚡ Quick Actions")
-Btn(FTab, "🔥 ALL IN ONE (FULL AUTO)", function() FishItAutoAll() end)
-Btn(FTab, "⏹️ Stop All Fish It", function()
-    FishItFeatures.AutoClick = false; FishItFeatures.AutoSkip = false
-    FishItFeatures.AutoReel = false; FishItFeatures.AutoCollect = false
-    Notify("🎣 Stopped", "All Fish It features stopped!", 2)
-end)
-Btn(FTab, "📊 Click Counter", function()
-    Notify("📊 Stats", string.format("Total Clicks: %d\nLast Click: %.1f sec ago", FishItFeatures._clickCount, tick() - FishItFeatures._lastClick), 4)
-end)
-
--- ═══ AUTO FARM TAB ═══
-local AFarmTab = CreateTab("Auto Farm", "🌾")
-Sec(AFarmTab, "🌾 Auto Farm")
-Tog(AFarmTab, "Auto Farm (General)", false, function(s)
-    Config.AutoFarm = s
-    if s then Notify("🌾 Auto Farm", "ON! (Auto farm enemies/items)", 2); AutoFarmGeneral() else Notify("🌾 Auto Farm", "OFF!", 2) end
-end)
-Sld(AFarmTab, "Farm Range", 10, 100, 30, function(v) Config.AutoFarmRange = v end)
-Sld(AFarmTab, "Farm Delay (s)", 0.5, 5, 1, function(v) Config.AutoFarmDelay = v end)
-Tog(AFarmTab, "Auto TP to Target", false, function(s) Config.AutoFarmTP = s end)
-
-Sec(AFarmTab, "💰 Auto Economy")
-Tog(AFarmTab, "Auto Sell", false, function(s) Config.AutoSell = s end)
-Tog(AFarmTab, "Auto Buy", false, function(s) Config.AutoBuy = s end)
-Tog(AFarmTab, "Auto Upgrade", false, function(s) Config.AutoUpgrade = s end)
-Tog(AFarmTab, "Auto Claim", false, function(s) Config.AutoClaim = s end)
-
--- ═══ ANTI AFK & REJOIN TAB ═══
-local RTab = CreateTab("Anti AFK", "🛡️")
-Sec(RTab, "🛡️ Anti AFK")
-Tog(RTab, "Anti AFK (Enhanced)", true, function(s)
-    Config.AntiAFK = s
-    if s then Notify("🛡️ Anti AFK", "ON! (Prevents kick)", 2); StartAntiAFK() else AntiAFKActive = false; Notify("🛡️ Anti AFK", "OFF!", 2) end
-end)
-Btn(RTab, "🔄 Force Anti AFK Now", function()
-    pcall(function()
-        local vu = game:GetService("VirtualUser")
-        vu:CaptureController(); vu:ClickButton2(Vector2.new())
-        Notify("🔄 Anti AFK", "Triggered!", 2)
-    end)
-end)
-
-Sec(RTab, "🔄 Auto Rejoin")
-Tog(RTab, "Auto Rejoin on Disconnect", false, function(s)
-    Config.AutoRejoin = s
-    if s then Notify("🔄 Auto Rejoin", "ON! (Rejoin on disconnect)", 2); AutoRejoin() else RejoinActive = false; Notify("🔄 Auto Rejoin", "OFF!", 2) end
-end)
-Btn(RTab, "📊 Rejoin Stats", function()
-    Notify("📊 Stats", string.format("Total Rejoins: %d\nMax Rejoins: %d", Config.RejoinCount, Config.MaxRejoin), 4)
-end)
-
-Sec(RTab, "📝 Auto Execute Script")
-Tog(RTab, "Auto Execute on Rejoin", false, function(s)
-    Config.AutoExecute = s; Notify("📝 Auto Execute", s and "ON! (Script will re-run on rejoin)" or "OFF!", 2)
-end)
-Btn(RTab, "💾 Save Current Script", function()
-    Config.ScriptCode = [[-- ETERNITY SCRIPT\nprint("Script re-executed!")]]
-    Notify("💾 Script", "Script saved! Will execute on rejoin.", 2)
-end)
-
--- ═══ AUTO CLEAR QUEST TAB ═══
-local QTab = CreateTab("Quest", "📋")
-Sec(QTab, "📋 Auto Clear Quest")
-Tog(QTab, "Auto Clear Quest", false, function(s)
-    Config.AutoClearQuest = s
-    if s then Notify("📋 Auto Clear", "ON! (Auto clear quests)", 2); AutoClearQuest() else Notify("📋 Auto Clear", "OFF!", 2) end
-end)
-Btn(QTab, "📊 Quest Stats", function()
-    Notify("📊 Stats", string.format("Quests Cleared: %d", Config.QuestCleared), 4)
-end)
-Btn(QTab, "📋 Clear Quest Now", function()
-    pcall(function()
-        for _, v in pairs(CoreGui:GetDescendants()) do
-            if v:IsA("TextButton") or v:IsA("ImageButton") then
-                local text = (v.Text or v.Name or ""):lower()
-                if text:find("quest") or text:find("complete") or text:find("claim") or text:find("clear") or text:find("finish") or text:find("done") then
-                    pcall(function() v:Activate() end); pcall(function() v:Click() end); fireclickdetector(v)
-                    Config.QuestCleared = Config.QuestCleared + 1; wait(0.3)
-                end
-            end
-        end
-        Notify("📋 Quest", "Quest clear triggered!", 2)
-    end)
-end)
-
--- ═══ PLAYER TAB ═══
-local PTab = CreateTab("Player", "👤")
-Sec(PTab, "Movement")
-Sld(PTab, "Walk Speed", 16, 500, 16, function(v) Config.Speed = v; local hum = LP.Character and LP.Character:FindFirstChild("Humanoid"); if hum then hum.WalkSpeed = v end end)
-Sld(PTab, "Jump Power", 50, 500, 50, function(v) Config.JumpPower = v; local hum = LP.Character and LP.Character:FindFirstChild("Humanoid"); if hum then hum.UseJumpPower = true; hum.JumpPower = v end end)
-Tog(PTab, "Infinite Jump", false, function(s) Config.InfiniteJump = s end)
-Tog(PTab, "Auto Jump", false, function(s) Config.AutoJump = s end)
-Tog(PTab, "Bhop", false, function(s) Config.Bhop = s end)
-Tog(PTab, "Moon Jump", false, function(s) Config.MoonJump = s end)
-Tog(PTab, "Sprint [Shift]", false, function(s) Config.Sprint = s end)
-Sld(PTab, "Sprint Speed", 20, 200, 40, function(v) Config.SprintSpeed = v end)
-
-Sec(PTab, "Fly & Noclip")
-Tog(PTab, "Fly [F]", false, function(s) if s then if not flying then ToggleFly() end else if flying then ToggleFly() end end end)
-Sld(PTab, "Fly Speed", 10, 300, 50, function(v) Config.FlySpeed = v end)
-Tog(PTab, "Noclip [N]", false, function(s) if s and not Config.Noclip then ToggleNoclip() end; if not s and Config.Noclip then ToggleNoclip() end end)
-
-Sec(PTab, "Protection")
-Tog(PTab, "God Mode", false, function(s) Config.GodMode = s end)
-Tog(PTab, "Anti-Void", false, function(s) Config.AntiVoid = s end)
-Tog(PTab, "Anti-Knockback", false, function(s) Config.AntiKnockback = s end)
-Tog(PTab, "No Fall Damage", false, function(s) Config.NoFallDamage = s end)
-
-Sec(PTab, "Character")
-Tog(PTab, "Click TP [E+Click]", false, function(s) Config.ClickTP = s end)
-Tog(PTab, "Invisible", false, function(s)
-    Config.Invisible = s
-    if LP.Character then
-        for _, v in pairs(LP.Character:GetDescendants()) do
-            if v:IsA("BasePart") or v:IsA("Decal") or v:IsA("Texture") then
-                v.Transparency = s and 1 or 0
-            end
-        end
+    if refs.addConsole then
+        refs.addConsole(string.format("[%s] %s", os.date("%H:%M:%S"), text), color)
     end
-end)
+end
 
--- ═══ PVP TAB ═══
-local PVP = CreateTab("PVP", "⚔️")
-Sec(PVP, "Target")
-PDrop(PVP, function(p) PVPTarget = p; AutoClickTarget = p; Notify("🎯 Target", "Selected: " .. p.Name, 2) end)
-
-Sec(PVP, "Teleport")
-Btn(PVP, "🚀 TP to Player", function()
-    if PVPTarget then
-        local char = LP.Character; local targetChar = PVPTarget.Character
-        if char and targetChar then
-            local hrp = char:FindFirstChild("HumanoidRootPart"); local targetHrp = targetChar:FindFirstChild("HumanoidRootPart")
-            if hrp and targetHrp then hrp.CFrame = targetHrp.CFrame; Notify("🚀 TP", "Teleported to " .. PVPTarget.Name, 2) end
-        end
-    else Notify("❌ Error", "Select a target first!", 2) end
-end)
-Btn(PVP, "🔙 TP Behind", function()
-    if PVPTarget then
-        local char = LP.Character; local targetChar = PVPTarget.Character
-        if char and targetChar then
-            local hrp = char:FindFirstChild("HumanoidRootPart"); local targetHrp = targetChar:FindFirstChild("HumanoidRootPart")
-            if hrp and targetHrp then hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 5); Notify("🔙 TP", "Teleported behind " .. PVPTarget.Name, 2) end
-        end
-    end
-end)
-Btn(PVP, "📥 Bring Player", function()
-    if PVPTarget then
-        local char = LP.Character; local targetChar = PVPTarget.Character
-        if char and targetChar then
-            local hrp = char:FindFirstChild("HumanoidRootPart"); local targetHrp = targetChar:FindFirstChild("HumanoidRootPart")
-            if hrp and targetHrp then targetHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -4); Notify("📥 Bring", "Brought " .. PVPTarget.Name, 2) end
-        end
-    end
-end)
-
-Sec(PVP, "Aimbot")
-Tog(PVP, "Super Aimbot", false, function(s)
-    Config.SuperAimbot = s; Config.Aimbot = s
-    if s then
-        spawn(function()
-            while Config.SuperAimbot and SG.Parent do
-                local closest, closestDist = nil, Config.AimbotFOV
-                for _, p in pairs(Players:GetPlayers()) do
-                    if p ~= LP and p.Character then
-                        local head = p.Character:FindFirstChild("Head")
-                        if head then
-                            local pos, vis = Cam:WorldToViewportPoint(head.Position)
-                            if vis then
-                                local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                                if dist < closestDist then closestDist = dist; closest = p end
-                            end
-                        end
-                    end
-                end
-                if closest and closest.Character and closest.Character:FindFirstChild("Head") then
-                    local head = closest.Character.Head
-                    Cam.CFrame = CFrame.new(Cam.CFrame.Position, head.Position)
-                end
-                wait(0.05)
-            end
+-- ============================================
+-- SAVE INSTANCE LOADER
+-- ============================================
+local function getSaveInstance()
+    local sources = {
+        "https://raw.githubusercontent.com/luau/UniversalSynSaveInstance/main/saveinstance.luau",
+        "https://raw.githubusercontent.com/FilteringEnabled/Nameless/refs/heads/main/Setup.lua",
+    }
+    for _, url in ipairs(sources) do
+        local ok, fn = pcall(function()
+            return loadstring(game:HttpGet(url, true))()
         end)
+        if ok and fn then
+            log("ok", "Loaded saveinstance from " .. url)
+            return fn
+        end
     end
-end)
-Sld(PVP, "FOV Size", 50, 800, 200, function(v) Config.AimbotFOV = v end)
-Sld(PVP, "Smoothness", 1, 20, 1, function(v) Config.AimbotSmooth = v end)
-Tog(PVP, "Crosshair", false, function(s)
-    Config.Crosshair = s
-    for _, part in pairs(crosshairParts) do part.Visible = s end
-end)
+    return nil
+end
 
-Sec(PVP, "Combat")
-Tog(PVP, "🖱️ Auto Click", false, function(s)
-    Config.AutoClick = s
-    if s then
-        Notify("🖱️ Auto Click", "ON! (10 clicks/sec)", 2)
-        AutoClickActive = true
-        spawn(function()
-            while AutoClickActive and SG.Parent do
-                pcall(function()
-                    SimulateClick()
-                    if AutoClickTarget and AutoClickTarget.Character then
-                        local targetHrp = AutoClickTarget.Character:FindFirstChild("HumanoidRootPart")
-                        if targetHrp and LP.Character then
-                            local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
-                            if hrp then hrp.CFrame = CFrame.new(hrp.Position, targetHrp.Position) end
-                        end
-                    end
-                    if LP.Character then
-                        local tool = LP.Character:FindFirstChildOfClass("Tool")
-                        if tool then pcall(function() tool:Activate() end) end
-                    end
+-- ============================================
+-- SERIALIZER
+-- ============================================
+local function serializeProperty(prop)
+    local ok, val = pcall(function() return prop end)
+    if not ok then return nil end
+    local t = typeof(val)
+    if t == "Vector3" then return {Type="Vector3", X=val.X, Y=val.Y, Z=val.Z} end
+    if t == "CFrame" then return {Type="CFrame", Components={val:GetComponents()}} end
+    if t == "Color3" then return {Type="Color3", R=val.R, G=val.G, B=val.B} end
+    if t == "UDim2" then return {Type="UDim2", XS=val.X.Scale, XO=val.X.Offset, YS=val.Y.Scale, YO=val.Y.Offset} end
+    if t == "BrickColor" then return {Type="BrickColor", Number=val.Number} end
+    if t == "EnumItem" then return {Type="Enum", Value=tostring(val)} end
+    if t == "number" or t == "string" or t == "boolean" then return val end
+    if t == "Instance" then return val:GetFullName() end
+    return tostring(val)
+end
+
+local function dumpInstance(inst, depth, maxDepth, counter)
+    depth = depth or 0
+    maxDepth = maxDepth or CONFIG.MaxDepth
+    if depth > maxDepth then return nil end
+
+    counter.n = counter.n + 1
+
+    local data = {
+        ClassName = inst.ClassName,
+        Name = inst.Name,
+        Children = {}
+    }
+
+    local propsToSave = {}
+    pcall(function()
+        for _, prop in ipairs({"Position","Size","CFrame","Color","BrickColor",
+            "Material","Transparency","CanCollide","Anchored","Shape",
+            "Text","TextColor3","BackgroundColor3","Ambient","Brightness",
+            "ClockTime","FogEnd","FogStart","PrimaryPart","Value","MeshId",
+            "TextureID","SoundId","Image","Frame","Face","Health","MaxHealth"}) do
+            local ok, val = pcall(function() return inst[prop] end)
+            if ok and val ~= nil then
+                local ser = serializeProperty(val)
+                if ser ~= nil then propsToSave[prop] = ser end
+            end
+        end
+    end)
+    data.Properties = propsToSave
+
+    for _, child in ipairs(inst:GetChildren()) do
+        local ok, childData = pcall(dumpInstance, child, depth + 1, maxDepth, counter)
+        if ok and childData then
+            table.insert(data.Children, childData)
+        end
+    end
+    return data
+end
+
+-- ============================================
+-- MAIN COPY FUNCTION
+-- ============================================
+function startCopy(mode, forceStreaming)
+    if SAVE_IN_PROGRESS then
+        toast("BUSY", "Copy already in progress", CONFIG.WarnColor)
+        return
+    end
+    SAVE_IN_PROGRESS = true
+
+    local startTime = os.clock()
+    updateStatus("Initializing copy process...", CONFIG.WarnColor)
+    log("info", "Copy started: " .. mode .. (forceStreaming and " (with streaming bypass)" or ""))
+
+    task.spawn(function()
+        task.wait(0.3)
+
+        if not API.writefile then
+            updateStatus("ERROR: writefile not supported", CONFIG.DangerColor)
+            toast("ERROR", "Executor doesn't support writefile()", CONFIG.DangerColor, 4)
+            SAVE_IN_PROGRESS = false
+            return
+        end
+
+        if API.makefolder then pcall(function() makefolder(CONFIG.SaveFolder) end) end
+
+        -- === STREAMING BYPASS STAGE ===
+        local useStreaming = forceStreaming or (CONFIG.AntiStreaming and isStreamingEnabled())
+        if useStreaming and isStreamingEnabled() then
+            updateStatus("Streaming detected, bypassing...", CONFIG.AccentColor)
+            toast("STREAMING", "Bypassing StreamingEnabled...", CONFIG.AccentColor, 3)
+
+            tryDisableStreaming()
+            task.wait(0.3)
+
+            updateStatus("Force-loading streamed areas...", CONFIG.AccentColor)
+            forceLoadStreamedAreas()
+
+            updateStatus("Streaming bypass complete", CONFIG.ThemeColor)
+            task.wait(0.3)
+        end
+        -- === END STREAMING BYPASS ===
+
+        -- Try saveinstance first
+        updateStatus("Loading save engine...", CONFIG.WarnColor)
+        local si = getSaveInstance()
+
+        if si then
+            local succeeded = false
+            for attempt = 1, 3 do
+                updateStatus(string.format("Running saveinstance (attempt %d/3)...", attempt), CONFIG.WarnColor)
+                local ok = pcall(function()
+                    si({
+                        SaveAll = (mode == "all"),
+                        SaveTerrain = true,
+                        SafeMode = false,
+                        SavePlayers = (mode == "all"),
+                        SaveObject = true,
+                    })
                 end)
-                wait(0.1)
+                if ok then succeeded = true; break end
+                task.wait(0.5)
             end
-        end)
-    else
-        AutoClickActive = false
-        Notify("🖱️ Auto Click", "OFF!", 2)
-    end
-end)
-Btn(PVP, "🎯 Set Click Target", function()
-    if PVPTarget then AutoClickTarget = PVPTarget; Notify("🎯 Target", "Auto Click target: " .. PVPTarget.Name, 2) else Notify("❌ Error", "Select a player first!", 2) end
-end)
-Btn(PVP, "⚡ Combo Click (5x)", function()
-    for i = 1, 5 do SimulateClick(); if LP.Character then local tool = LP.Character:FindFirstChildOfClass("Tool"); if tool then pcall(function() tool:Activate() end) end end; wait(0.05) end
-    Notify("⚡ Combo", "5x clicks!", 2)
-end)
-Btn(PVP, "⚡ Combo Click (10x)", function()
-    for i = 1, 10 do SimulateClick(); if LP.Character then local tool = LP.Character:FindFirstChildOfClass("Tool"); if tool then pcall(function() tool:Activate() end) end end; wait(0.05) end
-    Notify("⚡ Combo", "10x clicks!", 2)
-end)
 
-Tog(PVP, "Kill Aura", false, function(s) Config.KillAura = s end)
-Sld(PVP, "Kill Aura Range", 5, 50, 15, function(v) Config.KillAuraRange = v end)
-
--- ═══ ESP TAB ═══
-local ETab = CreateTab("ESP", "👁️")
-Sec(ETab, "Player ESP")
-Tog(ETab, "Player ESP", false, function(s) Config.ESP = s end)
-Sld(ETab, "ESP Distance", 50, 2000, 500, function(v) Config.ESPDistFilter = v end)
-Tog(ETab, "Tracer Lines", false, function(s) Config.TracerLines = s end)
-Tog(ETab, "Show FPS/Ping", false, function(s) Config.ShowFPS = s end)
-
--- ═══ EXTRA TAB ═══
-local XTab = CreateTab("Extra", "✨")
-Sec(XTab, "Teleport")
-Btn(XTab, "⬆️ TP Forward", function()
-    local char = LP.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then hrp.CFrame = hrp.CFrame + hrp.CFrame.LookVector * 20; Notify("⬆️ TP", "Teleported forward!", 2) end
-    end
-end)
-Btn(XTab, "⬆️ TP Up", function()
-    local char = LP.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0); Notify("⬆️ TP", "Teleported up!", 2) end
-    end
-end)
-Btn(XTab, "🏠 TP Spawn", function()
-    local spawn = Workspace:FindFirstChildOfClass("SpawnLocation")
-    if spawn and LP.Character then
-        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then hrp.CFrame = spawn.CFrame + Vector3.new(0, 5, 0); Notify("🏠 TP", "Teleported to spawn!", 2) end
-    end
-end)
-
-Sec(XTab, "World")
-Tog(XTab, "Fullbright", false, function(s)
-    Config.Fullbright = s
-    if s then Lighting.Brightness = 3; Lighting.ClockTime = 14; Lighting.GlobalShadows = false; Lighting.Ambient = Color3.fromRGB(180, 180, 180)
-    else Lighting.Brightness = 1; Lighting.GlobalShadows = true; Lighting.Ambient = Color3.fromRGB(127, 127, 127) end
-end)
-Tog(XTab, "No Fog", false, function(s) Lighting.FogEnd = s and 9999999 or 1000 end)
-
--- ═══ AUTO TAB ═══
-local ATab = CreateTab("Auto", "🤖")
-Sec(ATab, "Auto Movement")
-Tog(ATab, "Auto Walk Forward", false, function(s) Config.AutoWalk = s end)
-Tog(ATab, "Loop TP to Target", false, function(s) Config.LoopTP = s end)
-Sld(ATab, "Loop TP Delay (ms)", 100, 3000, 500, function(v) Config.LoopTPDelay = v end)
-
-Sec(ATab, "Auto Combat")
-Tog(ATab, "Auto Activate Tool", false, function(s) Config.AutoActivate = s end)
-Btn(ATab, "🔧 Auto Equip Best Tool", function()
-    local best, bestDmg = nil, 0
-    for _, t in pairs(LP.Backpack:GetChildren()) do
-        if t:IsA("Tool") then
-            local h = t:FindFirstChild("Handle")
-            if h then
-                local size = h.Size.Magnitude
-                if size > bestDmg then bestDmg = size; best = t end
+            if succeeded then
+                local elapsed = os.clock() - startTime
+                updateStatus(string.format("Map saved! (%.2fs)", elapsed), CONFIG.ThemeColor)
+                toast("SUCCESS", "Map saved via saveinstance!", CONFIG.ThemeColor, 3)
+                log("ok", "Save complete via saveinstance")
+                SAVE_IN_PROGRESS = false
+                return
+            else
+                updateStatus("saveinstance failed, fallback...", CONFIG.WarnColor)
             end
         end
-    end
-    if best then best.Parent = LP.Character; Notify("🔧 Equip", "Equipped: " .. best.Name, 2) else Notify("❌ Error", "No tools found!", 2) end
-end)
 
--- ═══ UTILITY TAB ═══
-local UTab = CreateTab("Util", "⚙️")
-Sec(UTab, "Info")
-Btn(UTab, "📊 Server Info", function()
-    local ping = 0; pcall(function() ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue() end)
-    Notify("Server", string.format("Players: %d/%d\nPlace: %s\nPing: %dms", #Players:GetPlayers(), Players.MaxPlayers, game.PlaceId, ping), 5)
-end)
-Btn(UTab, "🔧 Check Writefile", function()
-    Notify("Writefile", writefileSupported and "✅ SUPPORTED!" or "❌ NOT SUPPORTED!", 3)
-end)
-Btn(UTab, "🗑️ Destroy GUI", function() SG:Destroy() end)
+        -- Fallback manual dump
+        updateStatus("Running fallback dump...", CONFIG.WarnColor)
 
--- ═══ SETTINGS TAB ═══
-local STab = CreateTab("Settings", "🎀")
-Sec(STab, "Panel Size")
-Sld(STab, "Width", 350, 800, Settings.W, function(v)
-    Settings.W = v; TweenService:Create(MF, TweenInfo.new(0.2), {Size = UDim2.new(0, v, 0, Settings.H)}):Play()
-end)
-Sld(STab, "Height", 280, 600, Settings.H, function(v)
-    Settings.H = v; TweenService:Create(MF, TweenInfo.new(0.2), {Size = UDim2.new(0, Settings.W, 0, v)}):Play()
-end)
-Btn(STab, "📍 Reset Position", function()
-    MF.Position = UDim2.new(0.5, 0, 0.5, 0); Notify("📍 Reset", "Position reset!", 2)
-end)
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🌀 MAIN RENDER LOOP
--- ═══════════════════════════════════════════════════════════════════════════
-
-RunService.RenderStepped:Connect(function()
-    local char = LP.Character
-    local hum = char and char:FindFirstChild("Humanoid")
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    
-    if flying and flyBV and flyBG and hrp then
-        local dir = Vector3.zero
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + Cam.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - Cam.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - Cam.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + Cam.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.yAxis end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then dir = dir - Vector3.yAxis end
-        if dir.Magnitude > 0 then dir = dir.Unit * Config.FlySpeed end
-        flyBV.Velocity = dir; flyBG.CFrame = Cam.CFrame
-    end
-    
-    if Config.Noclip and char then
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = false end
+        local services
+        if mode == "all" then
+            services = {
+                Workspace, game:GetService("Lighting"),
+                game:GetService("ReplicatedStorage"),
+                game:GetService("ReplicatedFirst"),
+                game:GetService("StarterGui"),
+                game:GetService("StarterPack"),
+                game:GetService("StarterPlayer"),
+                game:GetService("SoundService"),
+                game:GetService("Chat"),
+                game:GetService("Teams"),
+            }
+        else
+            services = { Workspace }
         end
-    end
-    
-    if Config.AntiKnockback and hrp then
-        for _, v in pairs(hrp:GetChildren()) do
-            if (v:IsA("BodyVelocity") or v:IsA("BodyForce") or v:IsA("BodyAngularVelocity")) and v ~= flyBV and v ~= flyBG then
-                v:Destroy()
+
+        local result = {}
+        local counter = {n = 0}
+
+        for i, svc in ipairs(services) do
+            updateStatus(string.format("Dumping %s (%d/%d)...", svc.Name, i, #services), CONFIG.WarnColor)
+            local ok, data = pcall(dumpInstance, svc, 0, CONFIG.MaxDepth, counter)
+            if ok and data then table.insert(result, data) end
+            task.wait(0.05)
+        end
+
+        -- Add orphan instances
+        local orphans = getOrphanInstances()
+        if #orphans > 0 then
+            updateStatus(string.format("Adding %d orphans...", #orphans), CONFIG.WarnColor)
+            for _, inst in ipairs(orphans) do
+                local ok, data = pcall(dumpInstance, inst, 0, CONFIG.MaxDepth, counter)
+                if ok and data then table.insert(result, data) end
             end
         end
-    end
-    
-    if Config.AntiVoid and hrp then
-        if hrp.Position.Y < -50 then
-            hrp.CFrame = CFrame.new(0, 100, 0)
-            Notify("🛡️ Anti-Void", "Saved from void!", 2)
+
+        updateStatus(string.format("Collected %d instances", counter.n), CONFIG.WarnColor)
+        task.wait(0.2)
+
+        updateStatus("Encoding JSON...", CONFIG.WarnColor)
+        local jsonData = HttpService:JSONEncode(result)
+        local fileName = CONFIG.SaveFolder .. "/map_" .. mode .. "_" .. os.date("%Y%m%d_%H%M%S") .. ".json"
+
+        local ok, err = pcall(function() writefile(fileName, jsonData) end)
+
+        if ok then
+            local elapsed = os.clock() - startTime
+            local size = #jsonData
+            updateStatus(string.format("DONE! %.2fs, %s", elapsed, formatBytes(size)), CONFIG.ThemeColor)
+            toast("SUCCESS", string.format("Saved!\n%s\n%s", fileName, formatBytes(size)), CONFIG.ThemeColor, 4)
+            log("ok", "Fallback save: " .. fileName)
+        else
+            updateStatus("FAILED: " .. tostring(err), CONFIG.DangerColor)
+            toast("ERROR", "Save failed: " .. tostring(err), CONFIG.DangerColor, 4)
+            log("error", "Save failed: " .. tostring(err))
         end
-    end
-    
-    if Config.AutoJump and hum then hum.Jump = true end
-    
-    if Config.Bhop and hum then
-        local mv = UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.D)
-        if mv and hum.FloorMaterial ~= Enum.Material.Air then hum.Jump = true end
-    end
-    
-    if Config.MoonJump and hum and hrp and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-        hrp.Velocity = Vector3.new(hrp.Velocity.X, 50, hrp.Velocity.Z)
-    end
-    
-    if Config.LoopTP then
-        local target = PVPTarget or SelP
-        if target and target.Character and hrp then
-            local targetHrp = target.Character:FindFirstChild("HumanoidRootPart")
-            if targetHrp then hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, -3) end
-        end
-    end
-    
-    frc = frc + 1
-    if tick() - lt >= 1 then fps = frc; frc = 0; lt = tick() end
-    
-    if Config.ShowFPS then
-        FPSL.Visible = true
-        local ping = 0; pcall(function() ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
-        FPSL.Text = "FPS: " .. fps .. " | Ping: " .. ping
-    else
-        FPSL.Visible = false
-    end
+
+        SAVE_IN_PROGRESS = false
+    end)
+end
+
+-- ============================================
+-- BOOT
+-- ============================================
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "HACKER MAP COPIER v3.1",
+        Text = "Please wait, loading...",
+        Duration = 2,
+    })
 end)
 
--- ═══════════════════════════════════════════════════════════════════════════
--- 🚀 WELCOME & AUTO START
--- ═══════════════════════════════════════════════════════════════════════════
-
-Config.AntiAFK = true
-StartAntiAFK()
-
-spawn(function()
-    wait(2)
-    if IsFishItGame() then
-        Notify("🎣 Fish It Detected!", "Auto features available!\nBuka tab 'Fish It' untuk mengaktifkan.", 4)
-        print("🎣 FISH IT DETECTED!")
-    end
-end)
-
-local writefileStatus = writefileSupported and "YES" or "NO"
-
-Notify("✦ ETERNITY PREMIUM ULTIMATE v7", 
-    string.format("💎 Executor: %s\n✅ Writefile: %s\n🛡️ Anti AFK: ON\n🗺️ Copy Map: Ready\n🎵 Sound ID: Ready\n🎯 230+ Features\n✨ All Fixed!", 
-    EXECUTOR_NAME, writefileStatus), 6)
-
-print("╔═══════════════════════════════════════════════════════════════╗")
-print("║         ✦ ETERNITY PREMIUM ULTIMATE v7 ✦                  ║")
-print("║          230+ FEATURES • ALL BUG FIXED                     ║")
-print("╠═══════════════════════════════════════════════════════════════╣")
-print("║  📍 Executor: " .. EXECUTOR_NAME .. string.rep(" ", 40 - #EXECUTOR_NAME) .. "║")
-print("║  📁 Writefile: " .. writefileStatus .. string.rep(" ", 30) .. "║")
-print("║  🗺️ Copy Map: Copy entire map with progress bar             ║")
-print("║  🎵 Sound ID: Scan & copy all sounds                       ║")
-print("║  🛡️ Anti AFK: ACTIVE                                         ║")
-print("║  🎣 Fish It: Auto Cast • Skip Anim • Reel • Collect        ║")
-print("║  🌾 Auto Farm: Auto farm enemies/items                     ║")
-print("║  🔄 Auto Rejoin: Auto rejoin on disconnect                 ║")
-print("║  📋 Auto Clear Quest: Auto complete quests                 ║")
-print("║  🖱️ Auto Click: 10 clicks/sec • Combo 5x/10x              ║")
-print("║  ✅ Fly: F Key • Noclip: N Key • Click TP: E+Click        ║")
-print("║  💡 Buka tab 'Map Tools' untuk copy map                    ║")
-print("║  💡 Buka tab 'Sound' untuk Sound ID Detector              ║")
-print("║  💡 Buka tab 'Fish It' untuk auto fishing                  ║")
-print("║  💡 Buka tab 'Auto Farm' untuk farming                     ║")
-print("║  💡 Buka tab 'Anti AFK' untuk auto rejoin                  ║")
-print("║  💡 Buka tab 'Quest' untuk auto clear quest                ║")
-print("╚═══════════════════════════════════════════════════════════════╝")
+task.wait(0.3)
+loadConfig()
+applyStealth()
+task.wait(0.2)
+runLoading()
