@@ -5,8 +5,8 @@
     ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
     ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-           MAP COPIER PRO MAX v3.1
-        + STREAMING BYPASS INTEGRATED
+        MAP COPIER v3.2 — STEALTH EDITION
+        NO HOOK · NO TRACE · SAFE MODE
 ]]
 
 -- ============================================
@@ -19,20 +19,21 @@ local CONFIG = {
     WarnColor = Color3.fromRGB(255, 200, 0),
     BgColor = Color3.fromRGB(8, 8, 12),
     PanelColor = Color3.fromRGB(15, 15, 20),
-    TextColor = Color3.fromRGB(0, 255, 170),
     Font = Enum.Font.Code,
     SaveFolder = "HackerMapCopies",
     ConfigFile = "HackerMapCopies/config.json",
     LoadingDuration = 3.5,
-    AntiDetection = true,
-    AntiStreaming = true,
-    StreamRadius = 1500,
-    StreamGridStep = 500,
-    StreamWaitTime = 1.2,
-    StreamMaxPoints = 25,
-    PreloadWait = 3,
-    BatchSize = 100,
-    MaxDepth = 8,
+    -- Stealth settings
+    SafeMode = true,           -- WAJIB true di server AC
+    AllowStreamingBypass = false, -- default OFF, nyalain manual kalau aman
+    StreamRadius = 800,        -- lebih kecil = lebih stealth
+    StreamGridStep = 400,
+    StreamWaitTime = 1.5,      -- lebih lambat = lebih natural
+    StreamMaxPoints = 12,
+    PreloadWait = 4,
+    -- Dump settings
+    MaxDepth = 6,              -- lebih dangkal = lebih cepat
+    BatchSize = 50,
     LogToFile = true,
 }
 
@@ -48,7 +49,7 @@ local Stats = game:GetService("Stats")
 local LocalPlayer = Players.LocalPlayer
 
 -- ============================================
--- EXECUTOR DETECTION
+-- EXECUTOR API DETECTION
 -- ============================================
 local API = {
     writefile = type(writefile) == "function",
@@ -59,17 +60,14 @@ local API = {
     listfiles = type(listfiles) == "function",
     delfile = type(delfile) == "function",
     loadstring = type(loadstring) == "function" or type(load) == "function",
-    httpget = type(game.HttpGet) == "function" or type(httpget) == "function",
     identify = type(identifyexecutor) == "function",
     hookfunc = type(hookfunction) == "function",
     getconns = type(getconnections) == "function",
-    getgc = type(getgc) == "function",
     gethui = type(gethui) == "function",
     setclipboard = type(setclipboard) == "function",
     protectgui = type(protectgui) == "function",
     sethidden = type(sethiddenproperty) == "function",
     getnil = type(getnilinstances) == "function",
-    requestStream = type(LocalPlayer.RequestStreamAroundAsync) == "function",
 }
 
 local executorName = "Unknown"
@@ -99,13 +97,6 @@ end
 -- ============================================
 -- UTILITY
 -- ============================================
-local function safeCall(fn, ...)
-    local args = {...}
-    local ok, res = pcall(function() return fn(table.unpack(args)) end)
-    if not ok then log("error", tostring(res)) end
-    return res, ok
-end
-
 local function getGuiParent()
     local parent
     pcall(function() if gethui then parent = gethui() end end)
@@ -125,212 +116,114 @@ local function formatBytes(bytes)
 end
 
 -- ============================================
--- CONFIG PERSISTENCE
+-- ANTI-CHEAT DETECTOR
 -- ============================================
-local function loadConfig()
-    if not API.readfile or not API.isfile then return end
-    pcall(function()
-        if isfile(CONFIG.ConfigFile) then
-            local data = HttpService:JSONDecode(readfile(CONFIG.ConfigFile))
-            for k, v in pairs(data) do
-                if CONFIG[k] ~= nil then CONFIG[k] = v end
-            end
+local AC_DETECTED = {
+    name = "None",
+    detected = false,
+    risk = "LOW", -- LOW, MEDIUM, HIGH, EXTREME
+    allowStreamingBypass = false,
+    allowSaveInstance = true,
+}
+
+local AC_SIGNATURES = {
+    { name = "Adonis",       patterns = {"adonis", "adonis_", "adonisloader"},              risk = "HIGH" },
+    { name = "Kohl's",       patterns = {"kohl", "kohlsadmin", "kohl_admin"},               risk = "HIGH" },
+    { name = "HD Admin",     patterns = {"hdadmin", "hd_admin", "hd admin"},                risk = "MEDIUM" },
+    { name = "Cmdr",         patterns = {"cmdr", "cmdr_"},                                  risk = "MEDIUM" },
+    { name = "Basic Admin",  patterns = {"basicadmin", "basic_admin"},                      risk = "HIGH" },
+    { name = "Kaka Admin",   patterns = {"kaka", "kaka_admin"},                             risk = "MEDIUM" },
+    { name = "Nexus",        patterns = {"nexus", "nexus_"},                                risk = "MEDIUM" },
+    { name = "FilteringOff", patterns = {"anti_exploit", "anticheat", "anti_cheat", "ac_"}, risk = "HIGH" },
+    { name = "ByfronSig",    patterns = {"byfron", "hyperion"},                             risk = "EXTREME" },
+}
+
+local function detectAntiCheat()
+    local found = {}
+    
+    local scanRoots = {
+        game:GetService("ServerScriptService"),
+        game:GetService("ServerStorage"),
+        game:GetService("ReplicatedStorage"),
+        game:GetService("StarterPlayer"),
+        game:GetService("Workspace"),
+    }
+    
+    for _, root in ipairs(scanRoots) do
+        if root then
+            pcall(function()
+                for _, obj in ipairs(root:GetDescendants()) do
+                    local lower = obj.Name:lower()
+                    for _, sig in ipairs(AC_SIGNATURES) do
+                        for _, pat in ipairs(sig.patterns) do
+                            if lower:find(pat, 1, true) then
+                                if not found[sig.name] then
+                                    found[sig.name] = sig.risk
+                                end
+                                break
+                            end
+                        end
+                    end
+                    if #found >= 3 then break end
+                end
+            end)
         end
-    end)
+    end
+    
+    -- Cek jumlah terbanyak
+    for name, risk in pairs(found) do
+        AC_DETECTED.name = name
+        AC_DETECTED.detected = true
+        AC_DETECTED.risk = risk
+        break
+    end
+    
+    -- Set behavior berdasarkan risk
+    if AC_DETECTED.risk == "EXTREME" then
+        AC_DETECTED.allowStreamingBypass = false
+        AC_DETECTED.allowSaveInstance = false -- cuma JSON dump
+        CONFIG.SafeMode = true
+        CONFIG.MaxDepth = 4
+    elseif AC_DETECTED.risk == "HIGH" then
+        AC_DETECTED.allowStreamingBypass = false
+        AC_DETECTED.allowSaveInstance = true
+        CONFIG.SafeMode = true
+        CONFIG.MaxDepth = 5
+    elseif AC_DETECTED.risk == "MEDIUM" then
+        AC_DETECTED.allowStreamingBypass = false -- tetap OFF default
+        AC_DETECTED.allowSaveInstance = true
+    end
+    
+    return AC_DETECTED
 end
 
-local function saveConfig()
-    if not API.writefile then return end
-    pcall(function()
-        if API.makefolder and (not API.isfolder or not isfolder(CONFIG.SaveFolder)) then
-            makefolder(CONFIG.SaveFolder)
-        end
-        local toSave = {
-            AntiDetection = CONFIG.AntiDetection,
-            AntiStreaming = CONFIG.AntiStreaming,
-            StreamRadius = CONFIG.StreamRadius,
-            StreamGridStep = CONFIG.StreamGridStep,
-            StreamWaitTime = CONFIG.StreamWaitTime,
-            MaxDepth = CONFIG.MaxDepth,
-            LogToFile = CONFIG.LogToFile,
-        }
-        writefile(CONFIG.ConfigFile, HttpService:JSONEncode(toSave))
-    end)
-end
-
 -- ============================================
--- ANTI-DETECTION LAYER
+-- STEALTH LAYER (MINIMAL!)
 -- ============================================
 local function applyStealth()
-    if not CONFIG.AntiDetection then return end
-    log("info", "Applying stealth layer...")
-
-    if API.hookfunc then
-        pcall(function()
-            local oldKick = LocalPlayer.Kick
-            hookfunction(oldKick, function() 
-                log("warn", "Blocked LocalPlayer:Kick!")
-                return nil 
-            end)
-        end)
-        pcall(function()
-            local oldKick = Players.Kick
-            hookfunction(oldKick, function() 
-                log("warn", "Blocked Players:Kick!")
-                return nil 
-            end)
-        end)
-    end
-
+    -- ⚠️ TIDAK ADA hookfunction Kick di sini!
+    -- Itu penyebab utama ke-kick di Adonis/AC lain.
+    
+    log("info", "Stealth mode: no function hooks applied")
+    
     if API.protectgui then 
         pcall(function() protectgui(gethui()) end) 
     end
-
-    log("ok", "Stealth layer applied")
+    
+    -- Randomize GUI name biar ga ketara
+    log("ok", "GUI protected")
 end
 
 -- ============================================
--- STREAMING BYPASS LAYER
+-- STREAMING CHECK
 -- ============================================
-local STREAM_ORIGINAL_CF = nil
-
 local function isStreamingEnabled()
     local ok, val = pcall(function() return Workspace.StreamingEnabled end)
     return ok and val == true
 end
 
-local function tryDisableStreaming()
-    if not CONFIG.AntiStreaming then return end
-    log("info", "Attempting to disable streaming flag...")
-
-    pcall(function()
-        if sethiddenproperty then
-            sethiddenproperty(Workspace, "StreamingEnabled", false)
-        end
-    end)
-
-    pcall(function()
-        if API.sethidden and sethiddenproperty then
-            sethiddenproperty(Workspace, "StreamingIntegrityMode", 0)
-        end
-    end)
-
-    pcall(function()
-        if API.sethidden and sethiddenproperty then
-            sethiddenproperty(Workspace, "StreamingMinRadius", math.huge)
-            sethiddenproperty(Workspace, "StreamingTargetRadius", math.huge)
-        end
-    end)
-
-    log("ok", "Streaming disable attempt done")
-end
-
-local function forceLoadStreamedAreas()
-    if not CONFIG.AntiStreaming then return end
-    if not isStreamingEnabled() then
-        log("info", "Streaming not enabled, skip bypass")
-        return
-    end
-
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart", 5)
-    if not hrp then
-        log("warn", "No HumanoidRootPart, cannot teleport")
-        return
-    end
-
-    STREAM_ORIGINAL_CF = hrp.CFrame
-    local origin = Vector3.new(0, 50, 0)
-    local points = {}
-    local step = CONFIG.StreamGridStep
-    local rad = CONFIG.StreamRadius
-
-    for r = 0, rad, step do
-        if r == 0 then
-            table.insert(points, origin)
-        else
-            local segments = math.max(4, math.floor(r / step) * 4)
-            for i = 0, segments - 1 do
-                local ang = (i / segments) * math.pi * 2
-                table.insert(points, origin + Vector3.new(math.cos(ang) * r, 0, math.sin(ang) * r))
-            end
-        end
-        if #points >= CONFIG.StreamMaxPoints then break end
-    end
-
-    log("info", string.format("Streaming bypass: %d points to visit", #points))
-
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local originalWalkSpeed = humanoid and humanoid.WalkSpeed or 16
-    local originalJumpPower = humanoid and humanoid.JumpPower or 50
-
-    if humanoid then 
-        humanoid.WalkSpeed = 0 
-        pcall(function() humanoid.JumpPower = 0 end)
-    end
-
-    for i, pos in ipairs(points) do
-        if refs.statusText then
-            refs.statusText.Text = string.format("Streaming: %d/%d...", i, #points)
-            refs.statusText.TextColor3 = CONFIG.AccentColor
-        end
-        if refs.addConsole then
-            refs.addConsole(string.format("[%s] Streaming point %d/%d: (%.0f, %.0f, %.0f)",
-                os.date("%H:%M:%S"), i, #points, pos.X, pos.Y, pos.Z), CONFIG.AccentColor)
-        end
-
-        pcall(function()
-            LocalPlayer:RequestStreamAroundAsync(pos, CONFIG.StreamWaitTime)
-        end)
-
-        pcall(function()
-            hrp.CFrame = CFrame.new(pos)
-        end)
-
-        pcall(function()
-            Workspace.CurrentCamera.CFrame = CFrame.new(pos + Vector3.new(0, 100, 0))
-        end)
-
-        task.wait(CONFIG.StreamWaitTime)
-    end
-
-    if refs.statusText then
-        refs.statusText.Text = "Waiting for stream preload..."
-        refs.statusText.TextColor3 = CONFIG.WarnColor
-    end
-
-    task.wait(CONFIG.PreloadWait)
-
-    if humanoid then 
-        humanoid.WalkSpeed = originalWalkSpeed 
-        pcall(function() humanoid.JumpPower = originalJumpPower end)
-    end
-    if STREAM_ORIGINAL_CF then
-        pcall(function() hrp.CFrame = STREAM_ORIGINAL_CF end)
-    end
-
-    log("ok", "Streaming bypass completed")
-end
-
-local function getOrphanInstances()
-    local orphans = {}
-    if not API.getnil then return orphans end
-    pcall(function()
-        for _, inst in ipairs(getnilinstances()) do
-            if inst and typeof(inst) == "Instance" then
-                local parent = inst.Parent
-                if parent == nil or parent == Workspace then
-                    table.insert(orphans, inst)
-                end
-            end
-        end
-    end)
-    log("info", string.format("Found %d orphan instances", #orphans))
-    return orphans
-end
-
 -- ============================================
--- TOAST NOTIFICATION SYSTEM
+-- TOAST NOTIFICATION
 -- ============================================
 local toastContainer
 local function initToasts(parent)
@@ -424,14 +317,13 @@ end
 -- ============================================
 local function createMatrixRain(parent)
     local f = Instance.new("Frame")
-    f.Name = "MatrixRain"
     f.Size = UDim2.new(1, 0, 1, 0)
     f.BackgroundTransparency = 1
     f.ZIndex = 0
     f.ClipsDescendants = true
     f.Parent = parent
 
-    local chars = {"0","1","ア","イ","ウ","エ","オ","カ","キ","ク","ケ","コ","サ","シ","ス"}
+    local chars = {"0","1","ア","イ","ウ","エ","オ","カ","キ"}
     local columns = {}
     local colCount = math.floor(300 / 14)
 
@@ -481,11 +373,10 @@ end
 -- ============================================
 local function createLoadingScreen()
     local gui = Instance.new("ScreenGui")
-    gui.Name = "HackerLoading_" .. tostring(math.random(1000,9999))
+    gui.Name = "SysLoader_" .. tostring(math.random(10000,99999))
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
     gui.DisplayOrder = 999999
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     gui.Parent = getGuiParent()
 
     local bg = Instance.new("Frame")
@@ -495,48 +386,9 @@ local function createLoadingScreen()
     bg.ZIndex = 1
     bg.Parent = gui
 
-    local matrixBg = Instance.new("Frame")
-    matrixBg.Size = UDim2.new(1, 0, 1, 0)
-    matrixBg.BackgroundTransparency = 1
-    matrixBg.ZIndex = 1
-    matrixBg.Parent = bg
-
-    local chars = {"0","1"}
-    local cols = math.floor(400 / 16)
-    local colsData = {}
-    for i = 1, cols do
-        local c = Instance.new("TextLabel")
-        c.Size = UDim2.new(0, 14, 1, 0)
-        c.Position = UDim2.new(0, (i-1)*16, 0, -math.random(100, 800))
-        c.BackgroundTransparency = 1
-        c.TextColor3 = CONFIG.ThemeColor
-        c.TextTransparency = 0.75
-        c.Font = CONFIG.Font
-        c.TextSize = 14
-        c.TextXAlignment = Enum.TextXAlignment.Center
-        c.TextYAlignment = Enum.TextYAlignment.Top
-        c.ZIndex = 1
-        c.Parent = matrixBg
-        local str = ""
-        for _ = 1, 60 do str = str .. chars[math.random(1,2)] .. "\n" end
-        c.Text = str
-        table.insert(colsData, {obj=c, spd=math.random(50,150)/100})
-    end
-
-    local matrixConn = RunService.Heartbeat:Connect(function()
-        for _, c in ipairs(colsData) do
-            if c.obj and c.obj.Parent then
-                local p = c.obj.Position
-                local y = p.Y.Offset + c.spd * 2
-                if y > 600 then y = -900 end
-                c.obj.Position = UDim2.new(0, p.X.Offset, 0, y)
-            end
-        end
-    end)
-
     local c = Instance.new("Frame")
-    c.Size = UDim2.new(0, 340, 0, 220)
-    c.Position = UDim2.new(0.5, -170, 0.5, -110)
+    c.Size = UDim2.new(0, 340, 0, 200)
+    c.Position = UDim2.new(0.5, -170, 0.5, -100)
     c.BackgroundColor3 = CONFIG.BgColor
     c.BackgroundTransparency = 0.1
     c.BorderSizePixel = 0
@@ -554,7 +406,7 @@ local function createLoadingScreen()
     title.Size = UDim2.new(1, -30, 0, 30)
     title.Position = UDim2.new(0, 15, 0, 15)
     title.BackgroundTransparency = 1
-    title.Text = "> HACKER MAP COPIER PRO MAX v3.1_"
+    title.Text = "> MAP COPIER v3.2_"
     title.TextColor3 = CONFIG.ThemeColor
     title.Font = CONFIG.Font
     title.TextSize = 15
@@ -565,7 +417,7 @@ local function createLoadingScreen()
     local blink = true
     local cursorConn = RunService.RenderStepped:Connect(function()
         blink = not blink
-        title.Text = "> HACKER MAP COPIER PRO MAX v3.1" .. (blink and "_" or " ")
+        title.Text = "> MAP COPIER v3.2" .. (blink and "_" or " ")
     end)
 
     local logLabel = Instance.new("TextLabel")
@@ -603,7 +455,7 @@ local function createLoadingScreen()
 
     local barBg = Instance.new("Frame")
     barBg.Size = UDim2.new(0.85, 0, 0, 22)
-    barBg.Position = UDim2.new(0.075, 0, 0.65, 0)
+    barBg.Position = UDim2.new(0.075, 0, 0.7, 0)
     barBg.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     barBg.BorderSizePixel = 0
     barBg.ZIndex = 6
@@ -627,7 +479,7 @@ local function createLoadingScreen()
 
     local percentLabel = Instance.new("TextLabel")
     percentLabel.Size = UDim2.new(1, 0, 0, 20)
-    percentLabel.Position = UDim2.new(0, 0, 0.82, 0)
+    percentLabel.Position = UDim2.new(0, 0, 0.86, 0)
     percentLabel.BackgroundTransparency = 1
     percentLabel.Text = "0%"
     percentLabel.TextColor3 = CONFIG.ThemeColor
@@ -638,18 +490,16 @@ local function createLoadingScreen()
 
     return gui, barFill, percentLabel, logLabel, function()
         cursorConn:Disconnect()
-        matrixConn:Disconnect()
     end
 end
 
 local function runLoading()
     local gui, barFill, percentLabel, logLabel, cleanup = createLoadingScreen()
     local logs = {
-        "Initializing core...",
-        "Checking APIs...",
-        "Applying stealth...",
+        "Initializing...",
+        "Scanning environment...",
+        "Checking anti-cheat...",
         "Loading config...",
-        "Checking streaming...",
         "Ready!"
     }
 
@@ -659,9 +509,9 @@ local function runLoading()
     conn = RunService.Heartbeat:Connect(function(dt)
         progress = math.min(progress + dt * (100 / CONFIG.LoadingDuration), 100)
         barFill.Size = UDim2.new(progress/100, 0, 1, 0)
-        percentLabel.Text = string.format("%.1f%%", progress)
+        percentLabel.Text = string.format("%.0f%%", progress)
 
-        local idx = math.min(math.floor(progress / 17) + 1, #logs)
+        local idx = math.min(math.floor(progress / 20) + 1, #logs)
         if idx ~= lastIdx then
             lastIdx = idx
             logLabel.Text = "> " .. logs[idx]
@@ -687,10 +537,9 @@ local matrixConn = nil
 
 local function openMainUI()
     mainGui = Instance.new("ScreenGui")
-    mainGui.Name = "HackerMapCopier_" .. tostring(math.random(1000,9999))
+    mainGui.Name = "SysUI_" .. tostring(math.random(10000,99999))
     mainGui.ResetOnSpawn = false
     mainGui.DisplayOrder = 999998
-    mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     mainGui.Parent = getGuiParent()
 
     local matrixBg = Instance.new("Frame")
@@ -702,8 +551,8 @@ local function openMainUI()
     matrixConn = mConn
 
     local window = Instance.new("Frame")
-    window.Size = UDim2.new(0, 380, 0, 440)
-    window.Position = UDim2.new(0.5, -190, 0.5, -220)
+    window.Size = UDim2.new(0, 380, 0, 460)
+    window.Position = UDim2.new(0.5, -190, 0.5, -230)
     window.BackgroundColor3 = CONFIG.BgColor
     window.BackgroundTransparency = 0.05
     window.BorderSizePixel = 0
@@ -729,7 +578,7 @@ local function openMainUI()
     tl.Size = UDim2.new(1, -100, 1, 0)
     tl.Position = UDim2.new(0, 15, 0, 0)
     tl.BackgroundTransparency = 1
-    tl.Text = "> HACKER MAP COPIER v3.1_"
+    tl.Text = "> MAP COPIER v3.2 STEALTH_"
     tl.TextColor3 = CONFIG.ThemeColor
     tl.Font = CONFIG.Font
     tl.TextSize = 14
@@ -741,7 +590,7 @@ local function openMainUI()
         while mainGui and mainGui.Parent do
             task.wait(0.5)
             b = not b
-            tl.Text = "> HACKER MAP COPIER v3.1" .. (b and "_" or " ")
+            tl.Text = "> MAP COPIER v3.2 STEALTH" .. (b and "_" or " ")
         end
     end)
 
@@ -758,7 +607,6 @@ local function openMainUI()
         btn.Parent = tb
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
         btn.MouseButton1Click:Connect(cb)
-        return btn
     end
 
     makeWinBtn("X", -36, CONFIG.DangerColor, function()
@@ -769,7 +617,7 @@ local function openMainUI()
     local minimized = false
     makeWinBtn("-", -70, CONFIG.WarnColor, function()
         minimized = not minimized
-        window.Size = minimized and UDim2.new(0, 380, 0, 42) or UDim2.new(0, 380, 0, 440)
+        window.Size = minimized and UDim2.new(0, 380, 0, 42) or UDim2.new(0, 380, 0, 460)
     end)
 
     -- Tabs
@@ -834,41 +682,43 @@ local function openMainUI()
     local mainPage = tabPages["MAIN"]
 
     local info = Instance.new("Frame")
-    info.Size = UDim2.new(1, 0, 0, 90)
+    info.Size = UDim2.new(1, 0, 0, 95)
     info.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     info.BorderSizePixel = 0
     info.Parent = mainPage
     Instance.new("UICorner", info).CornerRadius = UDim.new(0, 8)
 
     local infoStroke = Instance.new("UIStroke")
-    infoStroke.Color = CONFIG.ThemeColor
+    infoStroke.Color = AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor
     infoStroke.Thickness = 1
-    infoStroke.Transparency = 0.6
+    infoStroke.Transparency = 0.5
     infoStroke.Parent = info
 
     local infoT = Instance.new("TextLabel")
     infoT.Size = UDim2.new(1, -20, 0, 18)
     infoT.Position = UDim2.new(0, 10, 0, 5)
     infoT.BackgroundTransparency = 1
-    infoT.Text = "> SYSTEM STATUS"
+    infoT.Text = "> SECURITY SCAN RESULT"
     infoT.TextColor3 = CONFIG.ThemeColor
     infoT.Font = CONFIG.Font
     infoT.TextSize = 11
     infoT.TextXAlignment = Enum.TextXAlignment.Left
     infoT.Parent = info
 
-    local streamingStatus = isStreamingEnabled() and "ENABLED" or "DISABLED"
+    local streamingStatus = isStreamingEnabled() and "ON" or "OFF"
+    local acStatus = AC_DETECTED.detected 
+        and string.format("%s (%s)", AC_DETECTED.name, AC_DETECTED.risk) 
+        or "None Detected"
+    local acColor = AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor
+
     local infoBody = Instance.new("TextLabel")
-    infoBody.Size = UDim2.new(1, -20, 0, 62)
+    infoBody.Size = UDim2.new(1, -20, 0, 70)
     infoBody.Position = UDim2.new(0, 10, 0, 24)
     infoBody.BackgroundTransparency = 1
     infoBody.Text = string.format(
-        "Executor: %s | Stealth: %s\nWriteFile: %s | Streaming: %s\nFolder: %s",
-        executorName,
-        CONFIG.AntiDetection and "ON" or "OFF",
-        API.writefile and "ON" or "OFF",
-        streamingStatus,
-        CONFIG.SaveFolder
+        "Executor : %s\nAnti-Cheat: %s\nStreaming: %s | Mode: %s",
+        executorName, acStatus, streamingStatus,
+        CONFIG.SafeMode and "SAFE" or "NORMAL"
     )
     infoBody.TextColor3 = Color3.fromRGB(180, 255, 180)
     infoBody.Font = CONFIG.Font
@@ -912,23 +762,22 @@ local function openMainUI()
         return btn
     end
 
-    makeBtn("[ COPY ALL SERVICES ]", 100, CONFIG.ThemeColor, Color3.fromRGB(0, 80, 60), function()
+    makeBtn("[ COPY ALL SERVICES ]", 105, CONFIG.ThemeColor, Color3.fromRGB(0, 80, 60), function()
         startCopy("all")
     end)
 
-    makeBtn("[ COPY WORKSPACE ONLY ]", 152, Color3.fromRGB(150, 255, 200), Color3.fromRGB(0, 50, 40), function()
+    makeBtn("[ COPY WORKSPACE ONLY ]", 157, Color3.fromRGB(150, 255, 200), Color3.fromRGB(0, 50, 40), function()
         startCopy("workspace")
     end)
 
-    makeBtn("[ COPY WITH STREAMING BYPASS ]", 204, CONFIG.AccentColor, Color3.fromRGB(0, 50, 80), function()
-        if not isStreamingEnabled() then
-            toast("INFO", "Streaming not enabled, using normal copy", CONFIG.WarnColor)
-        end
-        startCopy("all", true)
+    makeBtn("[ SAFE COPY (MINIMAL) ]", 209, CONFIG.WarnColor, Color3.fromRGB(50, 40, 0), function()
+        -- Safe copy: depth rendah, no streaming bypass
+        CONFIG.MaxDepth = 3
+        startCopy("workspace")
     end)
 
-    makeBtn("[ OPEN SAVE FOLDER ]", 256, CONFIG.WarnColor, Color3.fromRGB(50, 40, 0), function()
-        toast("INFO", "Files: " .. CONFIG.SaveFolder, CONFIG.WarnColor)
+    makeBtn("[ OPEN SAVE FOLDER ]", 261, CONFIG.AccentColor, Color3.fromRGB(0, 50, 80), function()
+        toast("INFO", "Files: " .. CONFIG.SaveFolder, CONFIG.AccentColor)
         if API.setclipboard then
             pcall(function() setclipboard(CONFIG.SaveFolder) end)
             toast("COPIED", "Path copied", CONFIG.AccentColor)
@@ -955,7 +804,7 @@ local function openMainUI()
     statusText.Size = UDim2.new(1, -30, 1, 0)
     statusText.Position = UDim2.new(0, 25, 0, 0)
     statusText.BackgroundTransparency = 1
-    statusText.Text = "Ready_"
+    statusText.Text = "Ready (Stealth Mode)_"
     statusText.TextColor3 = CONFIG.ThemeColor
     statusText.Font = CONFIG.Font
     statusText.TextSize = 11
@@ -1057,7 +906,7 @@ local function openMainUI()
     local statsPage = tabPages["STATS"]
 
     local statLabels = {}
-    local statNames = {"FPS", "Ping", "Memory (Lua)", "Instance Count", "Player Count", "Streaming Mode"}
+    local statNames = {"FPS", "Ping", "Memory", "Instance Count", "Player Count", "AC Risk"}
     for i, name in ipairs(statNames) do
         local row = Instance.new("Frame")
         row.Size = UDim2.new(1, 0, 0, 36)
@@ -1092,6 +941,9 @@ local function openMainUI()
         statLabels[name] = val
     end
 
+    statLabels["AC Risk"].Text = AC_DETECTED.risk
+    statLabels["AC Risk"].TextColor3 = AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor
+
     task.spawn(function()
         while mainGui and mainGui.Parent do
             task.wait(0.5)
@@ -1102,7 +954,7 @@ local function openMainUI()
                 statLabels["Ping"].Text = tostring(math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())) .. " ms"
             end)
             pcall(function()
-                statLabels["Memory (Lua)"].Text = formatBytes(math.floor(Stats:GetTotalMemoryUsageMb() * 1024 * 1024))
+                statLabels["Memory"].Text = formatBytes(math.floor(Stats:GetTotalMemoryUsageMb() * 1024 * 1024))
             end)
             pcall(function()
                 local count = 0
@@ -1111,9 +963,6 @@ local function openMainUI()
             end)
             pcall(function()
                 statLabels["Player Count"].Text = tostring(#Players:GetPlayers())
-            end)
-            pcall(function()
-                statLabels["Streaming Mode"].Text = isStreamingEnabled() and "ENABLED" or "DISABLED"
             end)
         end
     end)
@@ -1163,17 +1012,18 @@ local function openMainUI()
             toggle.Text = state and "ON" or "OFF"
             onChange(state)
         end)
+        return toggle
     end
 
-    makeSetting("Anti-Detection Stealth", 0, CONFIG.AntiDetection, function(v)
-        CONFIG.AntiDetection = v
-        if v then applyStealth() end
-        saveConfig()
+    makeSetting("Safe Mode", 0, CONFIG.SafeMode, function(v)
+        CONFIG.SafeMode = v
     end)
 
-    makeSetting("Anti-Streaming Bypass", 42, CONFIG.AntiStreaming, function(v)
-        CONFIG.AntiStreaming = v
-        saveConfig()
+    makeSetting("Allow Streaming Bypass", 42, CONFIG.AllowStreamingBypass, function(v)
+        if v and AC_DETECTED.detected then
+            toast("WARNING", AC_DETECTED.name .. " detected! Risky!", CONFIG.DangerColor, 4)
+        end
+        CONFIG.AllowStreamingBypass = v
     end)
 
     makeSetting("Matrix Background", 84, MATRIX_ENABLED, function(v)
@@ -1183,13 +1033,25 @@ local function openMainUI()
 
     makeSetting("Log to File", 126, CONFIG.LogToFile, function(v)
         CONFIG.LogToFile = v
-        saveConfig()
     end)
+
+    -- Warning label
+    local warnRow = Instance.new("TextLabel")
+    warnRow.Size = UDim2.new(1, 0, 0, 50)
+    warnRow.Position = UDim2.new(0, 0, 0, 172)
+    warnRow.BackgroundTransparency = 1
+    warnRow.Text = "⚠ Stealth mode: no function hooks\n⚠ Skip streaming bypass di server AC\n⚠ Gunakan SAFE COPY kalau ragu"
+    warnRow.TextColor3 = CONFIG.WarnColor
+    warnRow.Font = CONFIG.Font
+    warnRow.TextSize = 9
+    warnRow.TextXAlignment = Enum.TextXAlignment.Left
+    warnRow.TextYAlignment = Enum.TextYAlignment.Top
+    warnRow.Parent = settingsPage
 
     -- Max Depth slider
     local depthRow = Instance.new("Frame")
     depthRow.Size = UDim2.new(1, 0, 0, 50)
-    depthRow.Position = UDim2.new(0, 0, 0, 168)
+    depthRow.Position = UDim2.new(0, 0, 0, 230)
     depthRow.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
     depthRow.BorderSizePixel = 0
     depthRow.Parent = settingsPage
@@ -1215,7 +1077,7 @@ local function openMainUI()
     Instance.new("UICorner", depthBar).CornerRadius = UDim.new(1, 0)
 
     local depthFill = Instance.new("Frame")
-    depthFill.Size = UDim2.new(CONFIG.MaxDepth / 20, 0, 1, 0)
+    depthFill.Size = UDim2.new(CONFIG.MaxDepth / 15, 0, 1, 0)
     depthFill.BackgroundColor3 = CONFIG.ThemeColor
     depthFill.BorderSizePixel = 0
     depthFill.Parent = depthBar
@@ -1232,67 +1094,12 @@ local function openMainUI()
         local abs = depthBar.AbsolutePosition.X
         local size = depthBar.AbsoluteSize.X
         local pct = math.clamp((pos - abs) / size, 0, 1)
-        CONFIG.MaxDepth = math.floor(pct * 20) + 1
+        CONFIG.MaxDepth = math.floor(pct * 15) + 1
         depthFill.Size = UDim2.new(pct, 0, 1, 0)
         depthLbl.Text = "Max Depth: " .. CONFIG.MaxDepth
-        saveConfig()
     end)
 
-    -- Stream Radius slider
-    local srRow = Instance.new("Frame")
-    srRow.Size = UDim2.new(1, 0, 0, 50)
-    srRow.Position = UDim2.new(0, 0, 0, 222)
-    srRow.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    srRow.BorderSizePixel = 0
-    srRow.Parent = settingsPage
-    Instance.new("UICorner", srRow).CornerRadius = UDim.new(0, 6)
-
-    local srLbl = Instance.new("TextLabel")
-    srLbl.Size = UDim2.new(1, -20, 0, 18)
-    srLbl.Position = UDim2.new(0, 10, 0, 5)
-    srLbl.BackgroundTransparency = 1
-    srLbl.Text = "Stream Radius: " .. CONFIG.StreamRadius .. " studs"
-    srLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
-    srLbl.Font = CONFIG.Font
-    srLbl.TextSize = 11
-    srLbl.TextXAlignment = Enum.TextXAlignment.Left
-    srLbl.Parent = srRow
-
-    local srBar = Instance.new("Frame")
-    srBar.Size = UDim2.new(0.9, 0, 0, 6)
-    srBar.Position = UDim2.new(0.05, 0, 0, 32)
-    srBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    srBar.BorderSizePixel = 0
-    srBar.Parent = srRow
-    Instance.new("UICorner", srBar).CornerRadius = UDim.new(1, 0)
-
-    local srFill = Instance.new("Frame")
-    srFill.Size = UDim2.new(CONFIG.StreamRadius / 5000, 0, 1, 0)
-    srFill.BackgroundColor3 = CONFIG.AccentColor
-    srFill.BorderSizePixel = 0
-    srFill.Parent = srBar
-    Instance.new("UICorner", srFill).CornerRadius = UDim.new(1, 0)
-
-    local srBtn = Instance.new("TextButton")
-    srBtn.Size = UDim2.new(1, -20, 0, 14)
-    srBtn.Position = UDim2.new(0, 10, 0, 22)
-    srBtn.BackgroundTransparency = 1
-    srBtn.Text = ""
-    srBtn.Parent = srRow
-    srBtn.MouseButton1Click:Connect(function()
-        local pos = UserInputService:GetMouseLocation().X
-        local abs = srBar.AbsolutePosition.X
-        local size = srBar.AbsoluteSize.X
-        local pct = math.clamp((pos - abs) / size, 0, 1)
-        CONFIG.StreamRadius = math.floor(pct * 5000 / 100) * 100
-        srFill.Size = UDim2.new(pct, 0, 1, 0)
-        srLbl.Text = "Stream Radius: " .. CONFIG.StreamRadius .. " studs"
-        saveConfig()
-    end)
-
-    -- ============================================
-    -- KEYBOARD SHORTCUTS
-    -- ============================================
+    -- Shortcuts
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
         if input.KeyCode == Enum.KeyCode.H and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
@@ -1312,10 +1119,16 @@ local function openMainUI()
         BackgroundTransparency = 0.05
     }):Play()
 
-    toast("SYSTEM READY", "Executed at " .. os.date("%H:%M:%S"), CONFIG.ThemeColor)
-    addConsoleLine(string.format("[%s] [INFO] System initialized v3.1", os.date("%H:%M:%S")))
+    toast("READY (STEALTH)", "Executed at " .. os.date("%H:%M:%S"), CONFIG.ThemeColor)
+    addConsoleLine(string.format("[%s] [INFO] v3.2 Stealth initialized", os.date("%H:%M:%S")))
     addConsoleLine(string.format("[%s] [INFO] Executor: %s", os.date("%H:%M:%S"), executorName))
-    addConsoleLine(string.format("[%s] [INFO] Streaming: %s", os.date("%H:%M:%S"), isStreamingEnabled() and "ENABLED" or "DISABLED"))
+    addConsoleLine(string.format("[%s] [INFO] Anti-Cheat: %s (%s)", 
+        os.date("%H:%M:%S"), AC_DETECTED.name, AC_DETECTED.risk))
+    
+    if AC_DETECTED.detected then
+        addConsoleLine(string.format("[%s] [WARN] Use SAFE COPY in this server", 
+            os.date("%H:%M:%S")), CONFIG.WarnColor)
+    end
 
     refs.window = window
 end
@@ -1342,14 +1155,13 @@ end
 local function getSaveInstance()
     local sources = {
         "https://raw.githubusercontent.com/luau/UniversalSynSaveInstance/main/saveinstance.luau",
-        "https://raw.githubusercontent.com/FilteringEnabled/Nameless/refs/heads/main/Setup.lua",
     }
     for _, url in ipairs(sources) do
         local ok, fn = pcall(function()
             return loadstring(game:HttpGet(url, true))()
         end)
         if ok and fn then
-            log("ok", "Loaded saveinstance from " .. url)
+            log("ok", "saveinstance loaded")
             return fn
         end
     end
@@ -1392,8 +1204,8 @@ local function dumpInstance(inst, depth, maxDepth, counter)
         for _, prop in ipairs({"Position","Size","CFrame","Color","BrickColor",
             "Material","Transparency","CanCollide","Anchored","Shape",
             "Text","TextColor3","BackgroundColor3","Ambient","Brightness",
-            "ClockTime","FogEnd","FogStart","PrimaryPart","Value","MeshId",
-            "TextureID","SoundId","Image","Frame","Face","Health","MaxHealth"}) do
+            "ClockTime","FogEnd","FogStart","Value","MeshId",
+            "TextureID","SoundId","Image","Frame","Face"}) do
             local ok, val = pcall(function() return inst[prop] end)
             if ok and val ~= nil then
                 local ser = serializeProperty(val)
@@ -1415,7 +1227,7 @@ end
 -- ============================================
 -- MAIN COPY FUNCTION
 -- ============================================
-function startCopy(mode, forceStreaming)
+function startCopy(mode)
     if SAVE_IN_PROGRESS then
         toast("BUSY", "Copy already in progress", CONFIG.WarnColor)
         return
@@ -1423,8 +1235,8 @@ function startCopy(mode, forceStreaming)
     SAVE_IN_PROGRESS = true
 
     local startTime = os.clock()
-    updateStatus("Initializing copy process...", CONFIG.WarnColor)
-    log("info", "Copy started: " .. mode .. (forceStreaming and " (with streaming bypass)" or ""))
+    updateStatus("Initializing copy...", CONFIG.WarnColor)
+    log("info", "Copy started: " .. mode)
 
     task.spawn(function()
         task.wait(0.3)
@@ -1438,71 +1250,63 @@ function startCopy(mode, forceStreaming)
 
         if API.makefolder then pcall(function() makefolder(CONFIG.SaveFolder) end) end
 
-        -- === STREAMING BYPASS STAGE ===
-        local useStreaming = forceStreaming or (CONFIG.AntiStreaming and isStreamingEnabled())
-        if useStreaming and isStreamingEnabled() then
-            updateStatus("Streaming detected, bypassing...", CONFIG.AccentColor)
-            toast("STREAMING", "Bypassing StreamingEnabled...", CONFIG.AccentColor, 3)
-
-            tryDisableStreaming()
-            task.wait(0.3)
-
-            updateStatus("Force-loading streamed areas...", CONFIG.AccentColor)
-            forceLoadStreamedAreas()
-
-            updateStatus("Streaming bypass complete", CONFIG.ThemeColor)
-            task.wait(0.3)
-        end
-        -- === END STREAMING BYPASS ===
-
-        -- Try saveinstance first
-        updateStatus("Loading save engine...", CONFIG.WarnColor)
-        local si = getSaveInstance()
-
-        if si then
-            local succeeded = false
-            for attempt = 1, 3 do
-                updateStatus(string.format("Running saveinstance (attempt %d/3)...", attempt), CONFIG.WarnColor)
-                local ok = pcall(function()
-                    si({
-                        SaveAll = (mode == "all"),
-                        SaveTerrain = true,
-                        SafeMode = false,
-                        SavePlayers = (mode == "all"),
-                        SaveObject = true,
-                    })
-                end)
-                if ok then succeeded = true; break end
-                task.wait(0.5)
-            end
-
-            if succeeded then
-                local elapsed = os.clock() - startTime
-                updateStatus(string.format("Map saved! (%.2fs)", elapsed), CONFIG.ThemeColor)
-                toast("SUCCESS", "Map saved via saveinstance!", CONFIG.ThemeColor, 3)
-                log("ok", "Save complete via saveinstance")
-                SAVE_IN_PROGRESS = false
-                return
-            else
-                updateStatus("saveinstance failed, fallback...", CONFIG.WarnColor)
-            end
+        -- Cek AC: kalau detected & risk HIGH+, force JSON dump (skip saveinstance)
+        local forceJson = false
+        if AC_DETECTED.detected and (AC_DETECTED.risk == "HIGH" or AC_DETECTED.risk == "EXTREME") then
+            forceJson = true
+            updateStatus("AC detected, using JSON dump only", CONFIG.WarnColor)
         end
 
-        -- Fallback manual dump
-        updateStatus("Running fallback dump...", CONFIG.WarnColor)
+        if CONFIG.SafeMode then
+            updateStatus("SAFE mode active", CONFIG.WarnColor)
+        end
+
+        -- Try saveinstance (kalau aman)
+        if not forceJson and not CONFIG.SafeMode then
+            updateStatus("Loading save engine...", CONFIG.WarnColor)
+            local si = getSaveInstance()
+
+            if si then
+                local succeeded = false
+                for attempt = 1, 2 do
+                    updateStatus(string.format("saveinstance (attempt %d/2)...", attempt), CONFIG.WarnColor)
+                    local ok = pcall(function()
+                        si({
+                            SaveAll = (mode == "all"),
+                            SaveTerrain = true,
+                            SafeMode = false,
+                            SavePlayers = false, -- JANGAN save players
+                            SaveObject = true,
+                        })
+                    end)
+                    if ok then succeeded = true; break end
+                    task.wait(1)
+                end
+
+                if succeeded then
+                    local elapsed = os.clock() - startTime
+                    updateStatus(string.format("Saved! (%.2fs)", elapsed), CONFIG.ThemeColor)
+                    toast("SUCCESS", "Map saved!", CONFIG.ThemeColor, 3)
+                    log("ok", "saveinstance success")
+                    SAVE_IN_PROGRESS = false
+                    return
+                end
+            end
+        else
+            updateStatus("Skip saveinstance (safe mode)", CONFIG.WarnColor)
+        end
+
+        -- Fallback JSON dump
+        updateStatus("Running JSON dump...", CONFIG.WarnColor)
 
         local services
         if mode == "all" then
             services = {
                 Workspace, game:GetService("Lighting"),
                 game:GetService("ReplicatedStorage"),
-                game:GetService("ReplicatedFirst"),
                 game:GetService("StarterGui"),
-                game:GetService("StarterPack"),
                 game:GetService("StarterPlayer"),
                 game:GetService("SoundService"),
-                game:GetService("Chat"),
-                game:GetService("Teams"),
             }
         else
             services = { Workspace }
@@ -1515,17 +1319,7 @@ function startCopy(mode, forceStreaming)
             updateStatus(string.format("Dumping %s (%d/%d)...", svc.Name, i, #services), CONFIG.WarnColor)
             local ok, data = pcall(dumpInstance, svc, 0, CONFIG.MaxDepth, counter)
             if ok and data then table.insert(result, data) end
-            task.wait(0.05)
-        end
-
-        -- Add orphan instances
-        local orphans = getOrphanInstances()
-        if #orphans > 0 then
-            updateStatus(string.format("Adding %d orphans...", #orphans), CONFIG.WarnColor)
-            for _, inst in ipairs(orphans) do
-                local ok, data = pcall(dumpInstance, inst, 0, CONFIG.MaxDepth, counter)
-                if ok and data then table.insert(result, data) end
-            end
+            task.wait(0.1)
         end
 
         updateStatus(string.format("Collected %d instances", counter.n), CONFIG.WarnColor)
@@ -1540,13 +1334,12 @@ function startCopy(mode, forceStreaming)
         if ok then
             local elapsed = os.clock() - startTime
             local size = #jsonData
-            updateStatus(string.format("DONE! %.2fs, %s", elapsed, formatBytes(size)), CONFIG.ThemeColor)
-            toast("SUCCESS", string.format("Saved!\n%s\n%s", fileName, formatBytes(size)), CONFIG.ThemeColor, 4)
-            log("ok", "Fallback save: " .. fileName)
+            updateStatus(string.format("DONE %.2fs, %s", elapsed, formatBytes(size)), CONFIG.ThemeColor)
+            toast("SUCCESS", string.format("Saved! %s", formatBytes(size)), CONFIG.ThemeColor, 4)
+            log("ok", "JSON save: " .. fileName)
         else
             updateStatus("FAILED: " .. tostring(err), CONFIG.DangerColor)
-            toast("ERROR", "Save failed: " .. tostring(err), CONFIG.DangerColor, 4)
-            log("error", "Save failed: " .. tostring(err))
+            toast("ERROR", "Save failed", CONFIG.DangerColor, 4)
         end
 
         SAVE_IN_PROGRESS = false
@@ -1560,14 +1353,18 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "HACKER MAP COPIER v3.1",
-        Text = "Please wait, loading...",
+        Title = "MAP COPIER v3.2",
+        Text = "Initializing stealth mode...",
         Duration = 2,
     })
 end)
 
 task.wait(0.3)
-loadConfig()
+
+-- Detect AC dulu sebelum UI
+detectAntiCheat()
+log("info", string.format("AC Detection: %s (%s)", AC_DETECTED.name, AC_DETECTED.risk))
+
 applyStealth()
 task.wait(0.2)
 runLoading()
