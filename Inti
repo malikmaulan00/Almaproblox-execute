@@ -5,7 +5,7 @@
     ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
     ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-       MAP COPIER v4.2 — RESPONSIVE FIX
+       MAP COPIER v4.3 — FINAL FIXED
 ]]
 
 -- ============================================
@@ -321,7 +321,6 @@ local function createLoadingScreen()
     logo.ZIndex = 6
     logo.Parent = c
 
-    -- Fallback logo
     task.delay(1.5, function()
         if logo and logo.Parent and not logo.IsLoaded then
             logo.Image = ""
@@ -433,10 +432,9 @@ local mainGui, refs = nil, {}
 local SAVE_IN_PROGRESS = false
 
 -- ============================================
--- UI UTAMA v4.2
+-- UI UTAMA v4.3
 -- ============================================
 openMainUI = function()
-    -- ✅ FIX: Responsive sizing (landscape & portrait)
     local vp = workspace.CurrentCamera.ViewportSize
     local isPortrait = vp.Y > vp.X
     
@@ -451,7 +449,6 @@ openMainUI = function()
     if winW < 300 then winW = 300 end
     if winH < 280 then winH = 280 end
 
-    -- Palette
     local C = {
         bg       = Color3.fromRGB(11, 13, 16),
         panel    = Color3.fromRGB(19, 22, 25),
@@ -472,7 +469,6 @@ openMainUI = function()
     local FONT_B = Enum.Font.GothamBold
     local FONT_M = Enum.Font.Code
 
-    -- Helpers
     local function corner(p, r)
         local c = Instance.new("UICorner")
         c.CornerRadius = UDim.new(0, r or 10)
@@ -514,7 +510,6 @@ openMainUI = function()
     mainGui.DisplayOrder = 999998
     mainGui.Parent = getGuiParent()
 
-    -- Window
     local window = Instance.new("Frame")
     window.Name = "Window"
     window.Size = UDim2.new(0, winW, 0, winH)
@@ -527,13 +522,11 @@ openMainUI = function()
     corner(window, 14)
     stroke(window, C.border, 0)
 
-    -- Title bar
     local titleBar = Instance.new("Frame")
     titleBar.Size = UDim2.new(1, 0, 0, 52)
     titleBar.BackgroundTransparency = 1
     titleBar.Parent = window
 
-    -- Logo dengan fallback
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 34, 0, 34)
     logo.Position = UDim2.new(0, 16, 0.5, -17)
@@ -583,7 +576,7 @@ openMainUI = function()
     subtitleLbl.Size = UDim2.new(1, 0, 0, 14)
     subtitleLbl.Position = UDim2.new(0, 0, 0, 30)
     subtitleLbl.BackgroundTransparency = 1
-    subtitleLbl.Text = "v4.2 · " .. executorName
+    subtitleLbl.Text = "v4.3 · " .. executorName
     subtitleLbl.TextColor3 = C.textMute
     subtitleLbl.Font = FONT
     subtitleLbl.TextSize = 10
@@ -648,7 +641,6 @@ openMainUI = function()
         }):Play()
     end)
 
-    -- Main content
     local mainContent = Instance.new("Frame")
     mainContent.Size = UDim2.new(1, 0, 1, -52 - 32)
     mainContent.Position = UDim2.new(0, 0, 0, 52)
@@ -656,7 +648,6 @@ openMainUI = function()
     mainContent.Parent = window
     pad(mainContent, 0, 16, 0, 16)
 
-    -- Footer
     local footer = Instance.new("Frame")
     footer.Size = UDim2.new(1, 0, 0, 32)
     footer.Position = UDim2.new(0, 0, 1, -32)
@@ -682,7 +673,6 @@ openMainUI = function()
         minBtn.Text = minimized and "+" or "−"
     end)
 
-    -- Tab bar
     local tabBar = Instance.new("Frame")
     tabBar.Size = UDim2.new(1, 0, 0, 36)
     tabBar.BackgroundColor3 = C.panel
@@ -701,7 +691,6 @@ openMainUI = function()
     local tabButtons, tabPages = {}, {}
     local activeTab = "MAIN"
 
-    -- ✅ FIX: Pages container jadi ScrollingFrame
     local pagesContainer = Instance.new("ScrollingFrame")
     pagesContainer.Size = UDim2.new(1, 0, 1, -48)
     pagesContainer.Position = UDim2.new(0, 0, 0, 48)
@@ -720,20 +709,37 @@ openMainUI = function()
     pgPad.PaddingBottom = UDim.new(0, 12)
     pgPad.Parent = pagesContainer
 
+    -- ✅ FIXED: switchTab dengan icon + fallback dipisah
     local function switchTab(name)
         activeTab = name
         for id, data in pairs(tabButtons) do
             local active = (id == name)
+            
+            -- Button background
             TweenService:Create(data.btn, TweenInfo.new(0.18), {
                 BackgroundColor3 = active and C.card or C.panel,
             }):Play()
-            TweenService:Create(data.icon, TweenInfo.new(0.18), {
-                ImageColor3 = active and C.accent or C.textDim,
-                TextColor3 = active and C.accent or C.textDim,
-            }):Play()
-            TweenService:Create(data.txt, TweenInfo.new(0.18), {
-                TextColor3 = active and C.text or C.textDim,
-            }):Play()
+            
+            -- ImageLabel icon (cuma ImageColor3)
+            if data.icon then
+                TweenService:Create(data.icon, TweenInfo.new(0.18), {
+                    ImageColor3 = active and C.accent or C.textDim,
+                }):Play()
+            end
+            
+            -- TextLabel fallback icon (cuma TextColor3)
+            if data.iconFallback then
+                TweenService:Create(data.iconFallback, TweenInfo.new(0.18), {
+                    TextColor3 = active and C.accent or C.textDim,
+                }):Play()
+            end
+            
+            -- Tab text
+            if data.txt then
+                TweenService:Create(data.txt, TweenInfo.new(0.18), {
+                    TextColor3 = active and C.text or C.textDim,
+                }):Play()
+            end
         end
         for pName, pg in pairs(tabPages) do
             pg.Visible = (pName == name)
@@ -768,7 +774,6 @@ openMainUI = function()
         innerLayout.SortOrder = Enum.SortOrder.LayoutOrder
         innerLayout.Parent = inner
 
-        -- Icon dengan fallback
         local icon = Instance.new("ImageLabel")
         icon.Size = UDim2.new(0, 14, 0, 14)
         icon.BackgroundTransparency = 1
@@ -778,7 +783,6 @@ openMainUI = function()
         icon.LayoutOrder = 1
         icon.Parent = inner
 
-        -- ✅ FIX: Fallback icon sebagai TextLabel di atas image
         local iconFallback = Instance.new("TextLabel")
         iconFallback.Size = UDim2.new(0, 14, 0, 14)
         iconFallback.BackgroundTransparency = 1
@@ -855,7 +859,6 @@ openMainUI = function()
         tabPages[t.id] = pg
     end
 
-    -- Card helper
     local function makeCard(parent, y, height)
         local card = Instance.new("Frame")
         card.Size = UDim2.new(1, 0, 0, height)
@@ -1329,7 +1332,7 @@ openMainUI = function()
     }):Play()
 
     toast("Ready", "Initialized · " .. os.date("%H:%M"), C.accent, 2.5)
-    addConsoleLine(string.format("[%s] v4.2 ready", os.date("%H:%M:%S")), C.accent)
+    addConsoleLine(string.format("[%s] v4.3 ready", os.date("%H:%M:%S")), C.accent)
     addConsoleLine(string.format("[%s] Executor: %s", os.date("%H:%M:%S"), executorName), C.textDim)
     addConsoleLine(string.format("[%s] AC: %s (%s)", os.date("%H:%M:%S"), AC_DETECTED.name, AC_DETECTED.risk),
         AC_DETECTED.detected and C.danger or C.textDim)
@@ -1533,7 +1536,7 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "MAP COPIER v4.2",
+        Title = "MAP COPIER v4.3",
         Text = "Loading...",
         Duration = 2,
     })
