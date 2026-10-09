@@ -5,8 +5,7 @@
     ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
     ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-        MAP COPIER v3.2 — STEALTH EDITION
-        NO HOOK · NO TRACE · SAFE MODE
+        MAP COPIER v3.2 — STEALTH EDITION (FIXED)
 ]]
 
 -- ============================================
@@ -23,16 +22,14 @@ local CONFIG = {
     SaveFolder = "HackerMapCopies",
     ConfigFile = "HackerMapCopies/config.json",
     LoadingDuration = 3.5,
-    -- Stealth settings
-    SafeMode = true,           -- WAJIB true di server AC
-    AllowStreamingBypass = false, -- default OFF, nyalain manual kalau aman
-    StreamRadius = 800,        -- lebih kecil = lebih stealth
+    SafeMode = true,
+    AllowStreamingBypass = false,
+    StreamRadius = 800,
     StreamGridStep = 400,
-    StreamWaitTime = 1.5,      -- lebih lambat = lebih natural
+    StreamWaitTime = 1.5,
     StreamMaxPoints = 12,
     PreloadWait = 4,
-    -- Dump settings
-    MaxDepth = 6,              -- lebih dangkal = lebih cepat
+    MaxDepth = 6,
     BatchSize = 50,
     LogToFile = true,
 }
@@ -121,7 +118,7 @@ end
 local AC_DETECTED = {
     name = "None",
     detected = false,
-    risk = "LOW", -- LOW, MEDIUM, HIGH, EXTREME
+    risk = "LOW",
     allowStreamingBypass = false,
     allowSaveInstance = true,
 }
@@ -170,7 +167,6 @@ local function detectAntiCheat()
         end
     end
     
-    -- Cek jumlah terbanyak
     for name, risk in pairs(found) do
         AC_DETECTED.name = name
         AC_DETECTED.detected = true
@@ -178,10 +174,9 @@ local function detectAntiCheat()
         break
     end
     
-    -- Set behavior berdasarkan risk
     if AC_DETECTED.risk == "EXTREME" then
         AC_DETECTED.allowStreamingBypass = false
-        AC_DETECTED.allowSaveInstance = false -- cuma JSON dump
+        AC_DETECTED.allowSaveInstance = false
         CONFIG.SafeMode = true
         CONFIG.MaxDepth = 4
     elseif AC_DETECTED.risk == "HIGH" then
@@ -190,7 +185,7 @@ local function detectAntiCheat()
         CONFIG.SafeMode = true
         CONFIG.MaxDepth = 5
     elseif AC_DETECTED.risk == "MEDIUM" then
-        AC_DETECTED.allowStreamingBypass = false -- tetap OFF default
+        AC_DETECTED.allowStreamingBypass = false
         AC_DETECTED.allowSaveInstance = true
     end
     
@@ -198,19 +193,13 @@ local function detectAntiCheat()
 end
 
 -- ============================================
--- STEALTH LAYER (MINIMAL!)
+-- STEALTH LAYER (MINIMAL, NO HOOKS)
 -- ============================================
 local function applyStealth()
-    -- ⚠️ TIDAK ADA hookfunction Kick di sini!
-    -- Itu penyebab utama ke-kick di Adonis/AC lain.
-    
     log("info", "Stealth mode: no function hooks applied")
-    
     if API.protectgui then 
         pcall(function() protectgui(gethui()) end) 
     end
-    
-    -- Randomize GUI name biar ga ketara
     log("ok", "GUI protected")
 end
 
@@ -493,6 +482,11 @@ local function createLoadingScreen()
     end
 end
 
+-- ============================================
+-- FORWARD DECLARATION (biar runLoading bisa akses openMainUI)
+-- ============================================
+local openMainUI
+
 local function runLoading()
     local gui, barFill, percentLabel, logLabel, cleanup = createLoadingScreen()
     local logs = {
@@ -522,7 +516,11 @@ local function runLoading()
             task.wait(0.4)
             cleanup()
             gui:Destroy()
-            openMainUI()
+            if openMainUI then
+                openMainUI()
+            else
+                warn("[MAP COPIER] openMainUI is nil - forward declaration failed!")
+            end
         end
     end)
 end
@@ -535,7 +533,7 @@ local SAVE_IN_PROGRESS = false
 local MATRIX_ENABLED = true
 local matrixConn = nil
 
-local function openMainUI()
+openMainUI = function()
     mainGui = Instance.new("ScreenGui")
     mainGui.Name = "SysUI_" .. tostring(math.random(10000,99999))
     mainGui.ResetOnSpawn = false
@@ -620,7 +618,6 @@ local function openMainUI()
         window.Size = minimized and UDim2.new(0, 380, 0, 42) or UDim2.new(0, 380, 0, 460)
     end)
 
-    -- Tabs
     local tabsBar = Instance.new("Frame")
     tabsBar.Size = UDim2.new(1, -20, 0, 32)
     tabsBar.Position = UDim2.new(0, 10, 0, 50)
@@ -709,7 +706,6 @@ local function openMainUI()
     local acStatus = AC_DETECTED.detected 
         and string.format("%s (%s)", AC_DETECTED.name, AC_DETECTED.risk) 
         or "None Detected"
-    local acColor = AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor
 
     local infoBody = Instance.new("TextLabel")
     infoBody.Size = UDim2.new(1, -20, 0, 70)
@@ -771,9 +767,10 @@ local function openMainUI()
     end)
 
     makeBtn("[ SAFE COPY (MINIMAL) ]", 209, CONFIG.WarnColor, Color3.fromRGB(50, 40, 0), function()
-        -- Safe copy: depth rendah, no streaming bypass
+        local oldDepth = CONFIG.MaxDepth
         CONFIG.MaxDepth = 3
         startCopy("workspace")
+        CONFIG.MaxDepth = oldDepth
     end)
 
     makeBtn("[ OPEN SAVE FOLDER ]", 261, CONFIG.AccentColor, Color3.fromRGB(0, 50, 80), function()
@@ -1035,7 +1032,6 @@ local function openMainUI()
         CONFIG.LogToFile = v
     end)
 
-    -- Warning label
     local warnRow = Instance.new("TextLabel")
     warnRow.Size = UDim2.new(1, 0, 0, 50)
     warnRow.Position = UDim2.new(0, 0, 0, 172)
@@ -1048,7 +1044,6 @@ local function openMainUI()
     warnRow.TextYAlignment = Enum.TextYAlignment.Top
     warnRow.Parent = settingsPage
 
-    -- Max Depth slider
     local depthRow = Instance.new("Frame")
     depthRow.Size = UDim2.new(1, 0, 0, 50)
     depthRow.Position = UDim2.new(0, 0, 0, 230)
@@ -1099,7 +1094,6 @@ local function openMainUI()
         depthLbl.Text = "Max Depth: " .. CONFIG.MaxDepth
     end)
 
-    -- Shortcuts
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
         if input.KeyCode == Enum.KeyCode.H and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
@@ -1250,7 +1244,6 @@ function startCopy(mode)
 
         if API.makefolder then pcall(function() makefolder(CONFIG.SaveFolder) end) end
 
-        -- Cek AC: kalau detected & risk HIGH+, force JSON dump (skip saveinstance)
         local forceJson = false
         if AC_DETECTED.detected and (AC_DETECTED.risk == "HIGH" or AC_DETECTED.risk == "EXTREME") then
             forceJson = true
@@ -1261,7 +1254,6 @@ function startCopy(mode)
             updateStatus("SAFE mode active", CONFIG.WarnColor)
         end
 
-        -- Try saveinstance (kalau aman)
         if not forceJson and not CONFIG.SafeMode then
             updateStatus("Loading save engine...", CONFIG.WarnColor)
             local si = getSaveInstance()
@@ -1275,7 +1267,7 @@ function startCopy(mode)
                             SaveAll = (mode == "all"),
                             SaveTerrain = true,
                             SafeMode = false,
-                            SavePlayers = false, -- JANGAN save players
+                            SavePlayers = false,
                             SaveObject = true,
                         })
                     end)
@@ -1296,7 +1288,6 @@ function startCopy(mode)
             updateStatus("Skip saveinstance (safe mode)", CONFIG.WarnColor)
         end
 
-        -- Fallback JSON dump
         updateStatus("Running JSON dump...", CONFIG.WarnColor)
 
         local services
@@ -1360,8 +1351,6 @@ pcall(function()
 end)
 
 task.wait(0.3)
-
--- Detect AC dulu sebelum UI
 detectAntiCheat()
 log("info", string.format("AC Detection: %s (%s)", AC_DETECTED.name, AC_DETECTED.risk))
 
