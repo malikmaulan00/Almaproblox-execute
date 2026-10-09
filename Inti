@@ -5,7 +5,7 @@
     ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
     ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-        MAP COPIER v3.2 — STEALTH EDITION (FIXED)
+      MAP COPIER v3.3 FINAL — POLISHED STEALTH
 ]]
 
 -- ============================================
@@ -46,7 +46,7 @@ local Stats = game:GetService("Stats")
 local LocalPlayer = Players.LocalPlayer
 
 -- ============================================
--- EXECUTOR API DETECTION
+-- EXECUTOR API
 -- ============================================
 local API = {
     writefile = type(writefile) == "function",
@@ -54,17 +54,12 @@ local API = {
     makefolder = type(makefolder) == "function",
     isfile = type(isfile) == "function",
     isfolder = type(isfolder) == "function",
-    listfiles = type(listfiles) == "function",
-    delfile = type(delfile) == "function",
     loadstring = type(loadstring) == "function" or type(load) == "function",
     identify = type(identifyexecutor) == "function",
     hookfunc = type(hookfunction) == "function",
-    getconns = type(getconnections) == "function",
     gethui = type(gethui) == "function",
     setclipboard = type(setclipboard) == "function",
     protectgui = type(protectgui) == "function",
-    sethidden = type(sethiddenproperty) == "function",
-    getnil = type(getnilinstances) == "function",
 }
 
 local executorName = "Unknown"
@@ -75,8 +70,7 @@ if API.identify then pcall(function() executorName = identifyexecutor() end) end
 -- ============================================
 local LogBuffer = {}
 local function log(level, msg)
-    local entry = string.format("[%s] [%s] %s",
-        os.date("%H:%M:%S"), level:upper(), msg)
+    local entry = string.format("[%s] [%s] %s", os.date("%H:%M:%S"), level:upper(), msg)
     table.insert(LogBuffer, entry)
     if #LogBuffer > 500 then table.remove(LogBuffer, 1) end
     if CONFIG.LogToFile and API.writefile then
@@ -97,9 +91,7 @@ end
 local function getGuiParent()
     local parent
     pcall(function() if gethui then parent = gethui() end end)
-    if not parent then
-        pcall(function() parent = game:GetService("CoreGui") end)
-    end
+    if not parent then pcall(function() parent = game:GetService("CoreGui") end) end
     if not parent or not parent.Parent then
         parent = LocalPlayer:WaitForChild("PlayerGui")
     end
@@ -116,28 +108,24 @@ end
 -- ANTI-CHEAT DETECTOR
 -- ============================================
 local AC_DETECTED = {
-    name = "None",
-    detected = false,
-    risk = "LOW",
-    allowStreamingBypass = false,
-    allowSaveInstance = true,
+    name = "None", detected = false, risk = "LOW",
+    allowStreamingBypass = false, allowSaveInstance = true,
 }
 
 local AC_SIGNATURES = {
-    { name = "Adonis",       patterns = {"adonis", "adonis_", "adonisloader"},              risk = "HIGH" },
-    { name = "Kohl's",       patterns = {"kohl", "kohlsadmin", "kohl_admin"},               risk = "HIGH" },
-    { name = "HD Admin",     patterns = {"hdadmin", "hd_admin", "hd admin"},                risk = "MEDIUM" },
-    { name = "Cmdr",         patterns = {"cmdr", "cmdr_"},                                  risk = "MEDIUM" },
-    { name = "Basic Admin",  patterns = {"basicadmin", "basic_admin"},                      risk = "HIGH" },
-    { name = "Kaka Admin",   patterns = {"kaka", "kaka_admin"},                             risk = "MEDIUM" },
-    { name = "Nexus",        patterns = {"nexus", "nexus_"},                                risk = "MEDIUM" },
-    { name = "FilteringOff", patterns = {"anti_exploit", "anticheat", "anti_cheat", "ac_"}, risk = "HIGH" },
-    { name = "ByfronSig",    patterns = {"byfron", "hyperion"},                             risk = "EXTREME" },
+    { name = "Adonis",      patterns = {"adonis", "adonis_", "adonisloader"},              risk = "HIGH" },
+    { name = "Kohl's",      patterns = {"kohl", "kohlsadmin", "kohl_admin"},               risk = "HIGH" },
+    { name = "HD Admin",    patterns = {"hdadmin", "hd_admin", "hd admin"},                risk = "MEDIUM" },
+    { name = "Cmdr",        patterns = {"cmdr", "cmdr_"},                                  risk = "MEDIUM" },
+    { name = "Basic Admin", patterns = {"basicadmin", "basic_admin"},                      risk = "HIGH" },
+    { name = "Kaka Admin",  patterns = {"kaka", "kaka_admin"},                             risk = "MEDIUM" },
+    { name = "Nexus",       patterns = {"nexus", "nexus_"},                                risk = "MEDIUM" },
+    { name = "AntiCheat",   patterns = {"anti_exploit", "anticheat", "anti_cheat"},        risk = "HIGH" },
+    { name = "Byfron",      patterns = {"byfron", "hyperion"},                             risk = "EXTREME" },
 }
 
 local function detectAntiCheat()
     local found = {}
-    
     local scanRoots = {
         game:GetService("ServerScriptService"),
         game:GetService("ServerStorage"),
@@ -145,7 +133,6 @@ local function detectAntiCheat()
         game:GetService("StarterPlayer"),
         game:GetService("Workspace"),
     }
-    
     for _, root in ipairs(scanRoots) do
         if root then
             pcall(function()
@@ -154,9 +141,7 @@ local function detectAntiCheat()
                     for _, sig in ipairs(AC_SIGNATURES) do
                         for _, pat in ipairs(sig.patterns) do
                             if lower:find(pat, 1, true) then
-                                if not found[sig.name] then
-                                    found[sig.name] = sig.risk
-                                end
+                                if not found[sig.name] then found[sig.name] = sig.risk end
                                 break
                             end
                         end
@@ -166,14 +151,12 @@ local function detectAntiCheat()
             end)
         end
     end
-    
     for name, risk in pairs(found) do
         AC_DETECTED.name = name
         AC_DETECTED.detected = true
         AC_DETECTED.risk = risk
         break
     end
-    
     if AC_DETECTED.risk == "EXTREME" then
         AC_DETECTED.allowStreamingBypass = false
         AC_DETECTED.allowSaveInstance = false
@@ -184,35 +167,26 @@ local function detectAntiCheat()
         AC_DETECTED.allowSaveInstance = true
         CONFIG.SafeMode = true
         CONFIG.MaxDepth = 5
-    elseif AC_DETECTED.risk == "MEDIUM" then
-        AC_DETECTED.allowStreamingBypass = false
-        AC_DETECTED.allowSaveInstance = true
     end
-    
     return AC_DETECTED
 end
 
 -- ============================================
--- STEALTH LAYER (MINIMAL, NO HOOKS)
+-- STEALTH (NO HOOKS)
 -- ============================================
 local function applyStealth()
     log("info", "Stealth mode: no function hooks applied")
-    if API.protectgui then 
-        pcall(function() protectgui(gethui()) end) 
-    end
+    if API.protectgui then pcall(function() protectgui(gethui()) end) end
     log("ok", "GUI protected")
 end
 
--- ============================================
--- STREAMING CHECK
--- ============================================
 local function isStreamingEnabled()
     local ok, val = pcall(function() return Workspace.StreamingEnabled end)
     return ok and val == true
 end
 
 -- ============================================
--- TOAST NOTIFICATION
+-- TOAST SYSTEM
 -- ============================================
 local toastContainer
 local function initToasts(parent)
@@ -221,7 +195,7 @@ local function initToasts(parent)
     toastContainer.Size = UDim2.new(0, 280, 1, -20)
     toastContainer.Position = UDim2.new(1, -290, 0, 10)
     toastContainer.BackgroundTransparency = 1
-    toastContainer.ZIndex = 10
+    toastContainer.ZIndex = 100
     toastContainer.Parent = parent
 end
 
@@ -229,30 +203,26 @@ local function toast(title, msg, color, duration)
     if not toastContainer then return end
     color = color or CONFIG.ThemeColor
     duration = duration or 3
-
     local t = Instance.new("Frame")
     t.Size = UDim2.new(1, 0, 0, 60)
     t.Position = UDim2.new(1, 300, 0, 0)
     t.BackgroundColor3 = CONFIG.PanelColor
     t.BackgroundTransparency = 0.1
     t.BorderSizePixel = 0
-    t.ZIndex = 10
+    t.ZIndex = 100
     t.Parent = toastContainer
     Instance.new("UICorner", t).CornerRadius = UDim.new(0, 8)
-
     local s = Instance.new("UIStroke")
     s.Color = color
     s.Thickness = 1.5
     s.Parent = t
-
     local bar = Instance.new("Frame")
     bar.Size = UDim2.new(0, 4, 1, 0)
     bar.BackgroundColor3 = color
     bar.BorderSizePixel = 0
-    bar.ZIndex = 11
+    bar.ZIndex = 101
     bar.Parent = t
     Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 2)
-
     local titleL = Instance.new("TextLabel")
     titleL.Size = UDim2.new(1, -20, 0, 20)
     titleL.Position = UDim2.new(0, 12, 0, 6)
@@ -262,9 +232,8 @@ local function toast(title, msg, color, duration)
     titleL.Font = CONFIG.Font
     titleL.TextSize = 13
     titleL.TextXAlignment = Enum.TextXAlignment.Left
-    titleL.ZIndex = 11
+    titleL.ZIndex = 101
     titleL.Parent = t
-
     local msgL = Instance.new("TextLabel")
     msgL.Size = UDim2.new(1, -20, 0, 30)
     msgL.Position = UDim2.new(0, 12, 0, 26)
@@ -276,9 +245,8 @@ local function toast(title, msg, color, duration)
     msgL.TextWrapped = true
     msgL.TextXAlignment = Enum.TextXAlignment.Left
     msgL.TextYAlignment = Enum.TextYAlignment.Top
-    msgL.ZIndex = 11
+    msgL.ZIndex = 101
     msgL.Parent = t
-
     for _, other in ipairs(toastContainer:GetChildren()) do
         if other:IsA("Frame") then
             TweenService:Create(other, TweenInfo.new(0.2), {
@@ -286,75 +254,16 @@ local function toast(title, msg, color, duration)
             }):Play()
         end
     end
-
     TweenService:Create(t, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
-
     task.delay(duration, function()
         TweenService:Create(t, TweenInfo.new(0.3), {
-            Position = UDim2.new(1, 300, 0, 0),
-            BackgroundTransparency = 1
+            Position = UDim2.new(1, 300, 0, 0), BackgroundTransparency = 1
         }):Play()
         task.wait(0.35)
         if t then t:Destroy() end
     end)
-end
-
--- ============================================
--- MATRIX RAIN
--- ============================================
-local function createMatrixRain(parent)
-    local f = Instance.new("Frame")
-    f.Size = UDim2.new(1, 0, 1, 0)
-    f.BackgroundTransparency = 1
-    f.ZIndex = 0
-    f.ClipsDescendants = true
-    f.Parent = parent
-
-    local chars = {"0","1","ア","イ","ウ","エ","オ","カ","キ"}
-    local columns = {}
-    local colCount = math.floor(300 / 14)
-
-    for i = 1, colCount do
-        local col = Instance.new("TextLabel")
-        col.Size = UDim2.new(0, 12, 1, 0)
-        col.Position = UDim2.new(0, (i-1) * 14, 0, -math.random(100, 800))
-        col.BackgroundTransparency = 1
-        col.TextColor3 = CONFIG.ThemeColor
-        col.TextTransparency = 0.6
-        col.Font = CONFIG.Font
-        col.TextSize = 12
-        col.TextXAlignment = Enum.TextXAlignment.Center
-        col.TextYAlignment = Enum.TextYAlignment.Top
-        col.ZIndex = 0
-        col.Parent = f
-
-        local str = ""
-        for _ = 1, 40 do
-            str = str .. chars[math.random(1, #chars)] .. "\n"
-        end
-        col.Text = str
-
-        table.insert(columns, {
-            obj = col,
-            speed = math.random(50, 200) / 100,
-            resetY = math.random(-1000, -100),
-        })
-    end
-
-    local conn = RunService.Heartbeat:Connect(function()
-        for _, c in ipairs(columns) do
-            if c.obj and c.obj.Parent then
-                local pos = c.obj.Position
-                local newY = pos.Y.Offset + c.speed * 2
-                if newY > 500 then newY = c.resetY end
-                c.obj.Position = UDim2.new(0, pos.X.Offset, 0, newY)
-            end
-        end
-    end)
-
-    return f, conn
 end
 
 -- ============================================
@@ -395,7 +304,7 @@ local function createLoadingScreen()
     title.Size = UDim2.new(1, -30, 0, 30)
     title.Position = UDim2.new(0, 15, 0, 15)
     title.BackgroundTransparency = 1
-    title.Text = "> MAP COPIER v3.2_"
+    title.Text = "> MAP COPIER v3.3_"
     title.TextColor3 = CONFIG.ThemeColor
     title.Font = CONFIG.Font
     title.TextSize = 15
@@ -406,7 +315,7 @@ local function createLoadingScreen()
     local blink = true
     local cursorConn = RunService.RenderStepped:Connect(function()
         blink = not blink
-        title.Text = "> MAP COPIER v3.2" .. (blink and "_" or " ")
+        title.Text = "> MAP COPIER v3.3" .. (blink and "_" or " ")
     end)
 
     local logLabel = Instance.new("TextLabel")
@@ -483,7 +392,7 @@ local function createLoadingScreen()
 end
 
 -- ============================================
--- FORWARD DECLARATION (biar runLoading bisa akses openMainUI)
+-- FORWARD DECLARATION
 -- ============================================
 local openMainUI
 
@@ -516,23 +425,22 @@ local function runLoading()
             task.wait(0.4)
             cleanup()
             gui:Destroy()
-            if openMainUI then
-                openMainUI()
-            else
-                warn("[MAP COPIER] openMainUI is nil - forward declaration failed!")
-            end
+            if openMainUI then openMainUI() else warn("[MAP COPIER] openMainUI nil!") end
         end
     end)
 end
 
 -- ============================================
--- UI UTAMA
+-- STATE
 -- ============================================
 local mainGui, refs = nil, {}
 local SAVE_IN_PROGRESS = false
 local MATRIX_ENABLED = true
 local matrixConn = nil
 
+-- ============================================
+-- UI UTAMA
+-- ============================================
 openMainUI = function()
     mainGui = Instance.new("ScreenGui")
     mainGui.Name = "SysUI_" .. tostring(math.random(10000,99999))
@@ -540,131 +448,299 @@ openMainUI = function()
     mainGui.DisplayOrder = 999998
     mainGui.Parent = getGuiParent()
 
+    -- ========== CLICK SOUND ==========
+    local function playClick()
+        pcall(function()
+            local s = Instance.new("Sound")
+            s.SoundId = "rbxassetid://6895079853"
+            s.Volume = 0.3
+            s.Parent = mainGui
+            s:Play()
+            s.Ended:Connect(function() s:Destroy() end)
+        end)
+    end
+
+    -- ========== MATRIX RAIN ==========
     local matrixBg = Instance.new("Frame")
     matrixBg.Size = UDim2.new(1, 0, 1, 0)
     matrixBg.BackgroundTransparency = 1
     matrixBg.ZIndex = -1
     matrixBg.Parent = mainGui
-    local _, mConn = createMatrixRain(matrixBg)
-    matrixConn = mConn
 
+    local chars = {"0","1","ア","イ","ウ","エ","オ","カ","キ","ク","ケ","コ","サ","シ","ス","タ","ツ"}
+    local columns = {}
+    local colCount = math.floor(500 / 18)
+    for i = 1, colCount do
+        local col = Instance.new("TextLabel")
+        col.Size = UDim2.new(0, 16, 1, 0)
+        col.Position = UDim2.new(0, (i-1) * 18, 0, -math.random(100, 800))
+        col.BackgroundTransparency = 1
+        col.TextColor3 = CONFIG.ThemeColor
+        col.TextTransparency = 0.7
+        col.Font = CONFIG.Font
+        col.TextSize = 14
+        col.TextXAlignment = Enum.TextXAlignment.Center
+        col.TextYAlignment = Enum.TextYAlignment.Top
+        col.ZIndex = -1
+        col.Parent = matrixBg
+        local str = ""
+        for _ = 1, 50 do str = str .. chars[math.random(1, #chars)] .. "\n" end
+        col.Text = str
+        table.insert(columns, {obj=col, speed=math.random(50,180)/100, resetY=math.random(-1000,-100)})
+    end
+    matrixConn = RunService.Heartbeat:Connect(function()
+        for _, c in ipairs(columns) do
+            if c.obj and c.obj.Parent then
+                local p = c.obj.Position
+                local y = p.Y.Offset + c.speed * 2
+                if y > 700 then y = c.resetY end
+                c.obj.Position = UDim2.new(0, p.X.Offset, 0, y)
+            end
+        end
+    end)
+
+    -- ========== WINDOW ==========
     local window = Instance.new("Frame")
-    window.Size = UDim2.new(0, 380, 0, 460)
-    window.Position = UDim2.new(0.5, -190, 0.5, -230)
+    window.Name = "MainWindow"
+    window.Size = UDim2.new(0, 400, 0, 500)
+    window.Position = UDim2.new(0.5, -200, 0.5, -250)
     window.BackgroundColor3 = CONFIG.BgColor
     window.BackgroundTransparency = 0.05
     window.BorderSizePixel = 0
     window.Active = true
     window.Draggable = true
     window.Parent = mainGui
-    Instance.new("UICorner", window).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", window).CornerRadius = UDim.new(0, 10)
 
     local winStroke = Instance.new("UIStroke")
     winStroke.Color = CONFIG.ThemeColor
     winStroke.Thickness = 1.5
-    winStroke.Transparency = 0.2
+    winStroke.Transparency = 0.15
     winStroke.Parent = window
 
-    local tb = Instance.new("Frame")
-    tb.Size = UDim2.new(1, 0, 0, 42)
-    tb.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    tb.BorderSizePixel = 0
-    tb.Parent = window
-    Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 12)
+    local winGlow = Instance.new("UIStroke")
+    winGlow.Color = CONFIG.ThemeColor
+    winGlow.Thickness = 3
+    winGlow.Transparency = 0.85
+    winGlow.Parent = window
+    local glowPulse = TweenService:Create(winGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Transparency = 0.6, Thickness = 4,
+    })
+    glowPulse:Play()
 
-    local tl = Instance.new("TextLabel")
-    tl.Size = UDim2.new(1, -100, 1, 0)
-    tl.Position = UDim2.new(0, 15, 0, 0)
-    tl.BackgroundTransparency = 1
-    tl.Text = "> MAP COPIER v3.2 STEALTH_"
-    tl.TextColor3 = CONFIG.ThemeColor
-    tl.Font = CONFIG.Font
-    tl.TextSize = 14
-    tl.TextXAlignment = Enum.TextXAlignment.Left
-    tl.Parent = tb
-
+    -- Scanline overlay
+    local scanlines = Instance.new("Frame")
+    scanlines.Size = UDim2.new(1, 0, 1, 0)
+    scanlines.BackgroundTransparency = 1
+    scanlines.ClipsDescendants = true
+    scanlines.ZIndex = 50
+    scanlines.Parent = window
     task.spawn(function()
-        local b = true
-        while mainGui and mainGui.Parent do
-            task.wait(0.5)
-            b = not b
-            tl.Text = "> MAP COPIER v3.2 STEALTH" .. (b and "_" or " ")
+        while scanlines.Parent do
+            local line = Instance.new("Frame")
+            line.Size = UDim2.new(1, 0, 0, 2)
+            line.Position = UDim2.new(0, 0, 0, -10)
+            line.BackgroundColor3 = CONFIG.ThemeColor
+            line.BackgroundTransparency = 0.92
+            line.BorderSizePixel = 0
+            line.ZIndex = 50
+            line.Parent = scanlines
+            TweenService:Create(line, TweenInfo.new(3, Enum.EasingStyle.Linear), {
+                Position = UDim2.new(0, 0, 1, 10)
+            }):Play()
+            task.wait(3.5)
+            if line then line:Destroy() end
         end
     end)
+
+    -- ========== TITLE BAR ==========
+    local tb = Instance.new("Frame")
+    tb.Size = UDim2.new(1, 0, 0, 42)
+    tb.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    tb.BorderSizePixel = 0
+    tb.Parent = window
+    Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 10)
+
+    local titleLine = Instance.new("Frame")
+    titleLine.Size = UDim2.new(1, -20, 0, 1)
+    titleLine.Position = UDim2.new(0, 10, 1, -1)
+    titleLine.BackgroundColor3 = CONFIG.ThemeColor
+    titleLine.BackgroundTransparency = 0.4
+    titleLine.BorderSizePixel = 0
+    titleLine.ZIndex = 2
+    titleLine.Parent = tb
+
+    local logo = Instance.new("Frame")
+    logo.Size = UDim2.new(0, 10, 0, 10)
+    logo.Position = UDim2.new(0, 15, 0.5, -5)
+    logo.BackgroundColor3 = CONFIG.ThemeColor
+    logo.BorderSizePixel = 0
+    logo.ZIndex = 3
+    logo.Parent = tb
+    Instance.new("UICorner", logo).CornerRadius = UDim.new(0, 2)
+    local logoPulse = TweenService:Create(logo, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        BackgroundTransparency = 0.5,
+    })
+    logoPulse:Play()
+
+    local tl = Instance.new("TextLabel")
+    tl.Size = UDim2.new(1, -240, 1, 0)
+    tl.Position = UDim2.new(0, 32, 0, 0)
+    tl.BackgroundTransparency = 1
+    tl.Text = "MAP COPIER v3.3"
+    tl.TextColor3 = CONFIG.ThemeColor
+    tl.Font = CONFIG.Font
+    tl.TextSize = 13
+    tl.TextXAlignment = Enum.TextXAlignment.Left
+    tl.ZIndex = 3
+    tl.Parent = tb
+
+    local function makeChip(text, color, xOff)
+        local chip = Instance.new("Frame")
+        chip.Size = UDim2.new(0, 58, 0, 18)
+        chip.Position = UDim2.new(1, xOff, 0.5, -9)
+        chip.BackgroundColor3 = color
+        chip.BackgroundTransparency = 0.75
+        chip.BorderSizePixel = 0
+        chip.ZIndex = 3
+        chip.Parent = tb
+        Instance.new("UICorner", chip).CornerRadius = UDim.new(0, 9)
+        local cs = Instance.new("UIStroke")
+        cs.Color = color
+        cs.Thickness = 1
+        cs.Transparency = 0.3
+        cs.Parent = chip
+        local cl = Instance.new("TextLabel")
+        cl.Size = UDim2.new(1, 0, 1, 0)
+        cl.BackgroundTransparency = 1
+        cl.Text = text
+        cl.TextColor3 = color
+        cl.Font = CONFIG.Font
+        cl.TextSize = 9
+        cl.ZIndex = 4
+        cl.Parent = chip
+    end
+
+    makeChip(executorName:upper():sub(1, 8), CONFIG.AccentColor, -66)
+    makeChip(AC_DETECTED.detected and AC_DETECTED.risk or "SAFE",
+        AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor, -128)
 
     local function makeWinBtn(text, xOff, color, cb)
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(0, 28, 0, 28)
         btn.Position = UDim2.new(1, xOff, 0, 7)
-        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
         btn.Text = text
         btn.TextColor3 = color
         btn.Font = Enum.Font.Code
-        btn.TextSize = 15
+        btn.TextSize = 14
         btn.BorderSizePixel = 0
+        btn.ZIndex = 4
         btn.Parent = tb
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), { BackgroundColor3 = Color3.fromRGB(40, 40, 45) }):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), { BackgroundColor3 = Color3.fromRGB(25, 25, 30) }):Play()
+        end)
         btn.MouseButton1Click:Connect(cb)
+        return btn
     end
 
+    local mainContentRef = nil
+
     makeWinBtn("X", -36, CONFIG.DangerColor, function()
+        playClick()
         if matrixConn then matrixConn:Disconnect() end
+        glowPulse:Cancel()
+        logoPulse:Cancel()
         mainGui:Destroy()
     end)
 
     local minimized = false
-    makeWinBtn("-", -70, CONFIG.WarnColor, function()
+    local origSize = UDim2.new(0, 400, 0, 500)
+    local minSize = UDim2.new(0, 400, 0, 42)
+    local minBtn = makeWinBtn("-", -70, CONFIG.WarnColor, function()
+        playClick()
         minimized = not minimized
-        window.Size = minimized and UDim2.new(0, 380, 0, 42) or UDim2.new(0, 380, 0, 460)
+        if minimized then
+            window.Size = minSize
+            if mainContentRef then mainContentRef.Visible = false end
+        else
+            window.Size = origSize
+            if mainContentRef then mainContentRef.Visible = true end
+        end
+        minBtn.Text = minimized and "+" or "-"
     end)
 
+    -- ========== MAIN CONTENT ==========
+    local mainContent = Instance.new("Frame")
+    mainContent.Name = "MainContent"
+    mainContent.Size = UDim2.new(1, 0, 1, -42)
+    mainContent.Position = UDim2.new(0, 0, 0, 42)
+    mainContent.BackgroundTransparency = 1
+    mainContent.Parent = window
+    mainContentRef = mainContent
+
+    -- ========== TABS ==========
     local tabsBar = Instance.new("Frame")
-    tabsBar.Size = UDim2.new(1, -20, 0, 32)
-    tabsBar.Position = UDim2.new(0, 10, 0, 50)
-    tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    tabsBar.Size = UDim2.new(1, -20, 0, 36)
+    tabsBar.Position = UDim2.new(0, 10, 0, 8)
+    tabsBar.BackgroundColor3 = Color3.fromRGB(13, 13, 18)
     tabsBar.BorderSizePixel = 0
-    tabsBar.Parent = window
+    tabsBar.Parent = mainContent
     Instance.new("UICorner", tabsBar).CornerRadius = UDim.new(0, 6)
 
     local tabList = {"MAIN", "CONSOLE", "STATS", "SETTINGS"}
     local tabButtons, tabPages = {}, {}
-    local activeTab = "MAIN"
+    local tabUnderline = Instance.new("Frame")
+    tabUnderline.Size = UDim2.new(1/#tabList, -8, 0, 2)
+    tabUnderline.Position = UDim2.new(0, 4, 1, -2)
+    tabUnderline.BackgroundColor3 = CONFIG.ThemeColor
+    tabUnderline.BorderSizePixel = 0
+    tabUnderline.ZIndex = 5
+    tabUnderline.Parent = tabsBar
+    Instance.new("UICorner", tabUnderline).CornerRadius = UDim.new(1, 0)
 
     local pagesContainer = Instance.new("Frame")
-    pagesContainer.Size = UDim2.new(1, -20, 1, -145)
-    pagesContainer.Position = UDim2.new(0, 10, 0, 90)
+    pagesContainer.Size = UDim2.new(1, -20, 1, -110)
+    pagesContainer.Position = UDim2.new(0, 10, 0, 52)
     pagesContainer.BackgroundTransparency = 1
-    pagesContainer.Parent = window
+    pagesContainer.Parent = mainContent
 
+    local activeTab = "MAIN"
     local function switchTab(name)
         activeTab = name
-        for tName, btn in pairs(tabButtons) do
+        for i, tName in ipairs(tabList) do
+            local btn = tabButtons[tName]
             local active = (tName == name)
-            TweenService:Create(btn, TweenInfo.new(0.15), {
-                BackgroundColor3 = active and Color3.fromRGB(0, 80, 60) or Color3.fromRGB(15, 15, 20),
-                TextColor3 = active and CONFIG.ThemeColor or Color3.fromRGB(120, 120, 120),
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                TextColor3 = active and CONFIG.ThemeColor or Color3.fromRGB(100, 100, 110),
             }):Play()
+            if active then
+                TweenService:Create(tabUnderline, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = UDim2.new((i-1)/#tabList, 4, 1, -2)
+                }):Play()
+            end
         end
-        for pName, pg in pairs(tabPages) do
-            pg.Visible = (pName == name)
-        end
+        for pName, pg in pairs(tabPages) do pg.Visible = (pName == name) end
     end
 
     for i, tabName in ipairs(tabList) do
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1/#tabList, -4, 1, -4)
-        btn.Position = UDim2.new((i-1)/#tabList, 2, 0, 2)
-        btn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        btn.Size = UDim2.new(1/#tabList, 0, 1, 0)
+        btn.Position = UDim2.new((i-1)/#tabList, 0, 0, 0)
+        btn.BackgroundTransparency = 1
         btn.Text = tabName
-        btn.TextColor3 = Color3.fromRGB(120, 120, 120)
+        btn.TextColor3 = Color3.fromRGB(100, 100, 110)
         btn.Font = CONFIG.Font
         btn.TextSize = 11
         btn.BorderSizePixel = 0
+        btn.ZIndex = 4
         btn.Parent = tabsBar
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-        btn.MouseButton1Click:Connect(function() switchTab(tabName) end)
+        btn.MouseButton1Click:Connect(function() playClick(); switchTab(tabName) end)
         tabButtons[tabName] = btn
-
         local pg = Instance.new("Frame")
         pg.Size = UDim2.new(1, 0, 1, 0)
         pg.BackgroundTransparency = 1
@@ -673,107 +749,189 @@ openMainUI = function()
         tabPages[tabName] = pg
     end
 
-    -- ============================================
-    -- TAB: MAIN
-    -- ============================================
+    -- ========== CORNER BRACKETS ==========
+    local function addCornerBrackets(parent, color, size, thickness)
+        color = color or CONFIG.ThemeColor
+        size = size or 8
+        thickness = thickness or 2
+        local positions = {
+            {UDim2.new(0, 0, 0, 0), UDim2.new(0, size, 0, thickness)},
+            {UDim2.new(0, 0, 0, 0), UDim2.new(0, thickness, 0, size)},
+            {UDim2.new(1, -size, 0, 0), UDim2.new(0, size, 0, thickness)},
+            {UDim2.new(1, -thickness, 0, 0), UDim2.new(0, thickness, 0, size)},
+            {UDim2.new(0, 0, 1, -thickness), UDim2.new(0, size, 0, thickness)},
+            {UDim2.new(0, 0, 1, -size), UDim2.new(0, thickness, 0, size)},
+            {UDim2.new(1, -size, 1, -thickness), UDim2.new(0, size, 0, thickness)},
+            {UDim2.new(1, -thickness, 1, -size), UDim2.new(0, thickness, 0, size)},
+        }
+        for _, p in ipairs(positions) do
+            local br = Instance.new("Frame")
+            br.Size = p[2]
+            br.Position = p[1]
+            br.BackgroundColor3 = color
+            br.BorderSizePixel = 0
+            br.ZIndex = 5
+            br.Parent = parent
+        end
+    end
+
+    -- ========== TAB: MAIN ==========
     local mainPage = tabPages["MAIN"]
 
     local info = Instance.new("Frame")
-    info.Size = UDim2.new(1, 0, 0, 95)
-    info.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    info.Size = UDim2.new(1, 0, 0, 100)
+    info.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    info.BackgroundTransparency = 0.2
     info.BorderSizePixel = 0
     info.Parent = mainPage
     Instance.new("UICorner", info).CornerRadius = UDim.new(0, 8)
-
     local infoStroke = Instance.new("UIStroke")
     infoStroke.Color = AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor
     infoStroke.Thickness = 1
-    infoStroke.Transparency = 0.5
+    infoStroke.Transparency = 0.6
     infoStroke.Parent = info
+    addCornerBrackets(info, AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor, 8, 2)
 
     local infoT = Instance.new("TextLabel")
-    infoT.Size = UDim2.new(1, -20, 0, 18)
-    infoT.Position = UDim2.new(0, 10, 0, 5)
+    infoT.Size = UDim2.new(1, -20, 0, 20)
+    infoT.Position = UDim2.new(0, 12, 0, 6)
     infoT.BackgroundTransparency = 1
-    infoT.Text = "> SECURITY SCAN RESULT"
+    infoT.Text = "// SECURITY SCAN"
     infoT.TextColor3 = CONFIG.ThemeColor
     infoT.Font = CONFIG.Font
     infoT.TextSize = 11
     infoT.TextXAlignment = Enum.TextXAlignment.Left
     infoT.Parent = info
 
+    local function makeStatRow(parent, y, label, value, valueColor)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, -24, 0, 18)
+        row.Position = UDim2.new(0, 12, 0, y)
+        row.BackgroundTransparency = 1
+        row.Parent = parent
+        local l = Instance.new("TextLabel")
+        l.Size = UDim2.new(0.4, 0, 1, 0)
+        l.BackgroundTransparency = 1
+        l.Text = label
+        l.TextColor3 = Color3.fromRGB(130, 130, 140)
+        l.Font = CONFIG.Font
+        l.TextSize = 10
+        l.TextXAlignment = Enum.TextXAlignment.Left
+        l.Parent = row
+        local v = Instance.new("TextLabel")
+        v.Size = UDim2.new(0.6, 0, 1, 0)
+        v.Position = UDim2.new(0.4, 0, 0, 0)
+        v.BackgroundTransparency = 1
+        v.Text = value
+        v.TextColor3 = valueColor or Color3.fromRGB(200, 255, 200)
+        v.Font = CONFIG.Font
+        v.TextSize = 10
+        v.TextXAlignment = Enum.TextXAlignment.Left
+        v.Parent = row
+    end
+
     local streamingStatus = isStreamingEnabled() and "ON" or "OFF"
-    local acStatus = AC_DETECTED.detected 
-        and string.format("%s (%s)", AC_DETECTED.name, AC_DETECTED.risk) 
-        or "None Detected"
+    local acStatus = AC_DETECTED.detected and string.format("%s (%s)", AC_DETECTED.name, AC_DETECTED.risk) or "CLEAN"
 
-    local infoBody = Instance.new("TextLabel")
-    infoBody.Size = UDim2.new(1, -20, 0, 70)
-    infoBody.Position = UDim2.new(0, 10, 0, 24)
-    infoBody.BackgroundTransparency = 1
-    infoBody.Text = string.format(
-        "Executor : %s\nAnti-Cheat: %s\nStreaming: %s | Mode: %s",
-        executorName, acStatus, streamingStatus,
-        CONFIG.SafeMode and "SAFE" or "NORMAL"
-    )
-    infoBody.TextColor3 = Color3.fromRGB(180, 255, 180)
-    infoBody.Font = CONFIG.Font
-    infoBody.TextSize = 10
-    infoBody.TextXAlignment = Enum.TextXAlignment.Left
-    infoBody.TextYAlignment = Enum.TextYAlignment.Top
-    infoBody.Parent = info
+    makeStatRow(info, 28, "Executor", executorName, CONFIG.AccentColor)
+    makeStatRow(info, 44, "Anti-Cheat", acStatus, AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor)
+    makeStatRow(info, 60, "Streaming", streamingStatus, streamingStatus == "ON" and CONFIG.WarnColor or CONFIG.ThemeColor)
+    makeStatRow(info, 76, "Mode", CONFIG.SafeMode and "SAFE" or "NORMAL", CONFIG.ThemeColor)
 
-    local function makeBtn(text, y, color, bg, cb)
+    -- ========== PRO BUTTONS ==========
+    local function makeProBtn(text, y, color, bgColor, cb)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 46)
+        btn.Size = UDim2.new(1, 0, 0, 44)
         btn.Position = UDim2.new(0, 0, 0, y)
-        btn.BackgroundColor3 = bg
-        btn.Text = text
-        btn.TextColor3 = color
-        btn.Font = CONFIG.Font
-        btn.TextSize = 15
+        btn.BackgroundColor3 = bgColor
+        btn.Text = ""
         btn.BorderSizePixel = 0
+        btn.AutoButtonColor = false
         btn.Parent = mainPage
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-        local s = Instance.new("UIStroke")
-        s.Color = color
-        s.Thickness = 1.5
-        s.Transparency = 0.3
-        s.Parent = btn
-        btn.MouseButton1Click:Connect(cb)
+
+        local grad = Instance.new("UIGradient")
+        grad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(
+                math.max(bgColor.R*255-20, 0),
+                math.max(bgColor.G*255-20, 0),
+                math.max(bgColor.B*255-20, 0)
+            )),
+            ColorSequenceKeypoint.new(1, bgColor),
+        })
+        grad.Rotation = 90
+        grad.Parent = btn
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = color
+        stroke.Thickness = 1.5
+        stroke.Transparency = 0.4
+        stroke.Parent = btn
+
+        local accent = Instance.new("Frame")
+        accent.Size = UDim2.new(0, 3, 0.7, 0)
+        accent.Position = UDim2.new(0, 6, 0.15, 0)
+        accent.BackgroundColor3 = color
+        accent.BorderSizePixel = 0
+        accent.ZIndex = 3
+        accent.Parent = btn
+        Instance.new("UICorner", accent).CornerRadius = UDim.new(0, 2)
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -20, 1, 0)
+        label.Position = UDim2.new(0, 15, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = color
+        label.Font = CONFIG.Font
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Center
+        label.ZIndex = 3
+        label.Parent = btn
+
         btn.MouseEnter:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.15), {
-                BackgroundColor3 = Color3.fromRGB(
-                    math.min(bg.R*255+30, 255),
-                    math.min(bg.G*255+30, 255),
-                    math.min(bg.B*255+30, 255)
-                )
+            TweenService:Create(stroke, TweenInfo.new(0.15), { Transparency = 0.1, Thickness = 2 }):Play()
+            TweenService:Create(accent, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, 4, 0.9, 0),
+                Position = UDim2.new(0, 4, 0.05, 0)
             }):Play()
         end)
         btn.MouseLeave:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.15), {
-                BackgroundColor3 = bg
+            TweenService:Create(stroke, TweenInfo.new(0.15), { Transparency = 0.4, Thickness = 1.5 }):Play()
+            TweenService:Create(accent, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, 3, 0.7, 0),
+                Position = UDim2.new(0, 6, 0.15, 0)
             }):Play()
         end)
+        btn.MouseButton1Down:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.08), {
+                Size = UDim2.new(0.98, 0, 0, 42),
+                Position = UDim2.new(0, 3, 0, y + 1),
+            }):Play()
+        end)
+        btn.MouseButton1Up:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.08), {
+                Size = UDim2.new(1, 0, 0, 44),
+                Position = UDim2.new(0, 0, 0, y),
+            }):Play()
+        end)
+        btn.MouseButton1Click:Connect(function() playClick(); cb() end)
         return btn
     end
 
-    makeBtn("[ COPY ALL SERVICES ]", 105, CONFIG.ThemeColor, Color3.fromRGB(0, 80, 60), function()
+    makeProBtn("[ COPY ALL SERVICES ]", 108, CONFIG.ThemeColor, Color3.fromRGB(0, 45, 35), function()
         startCopy("all")
     end)
-
-    makeBtn("[ COPY WORKSPACE ONLY ]", 157, Color3.fromRGB(150, 255, 200), Color3.fromRGB(0, 50, 40), function()
+    makeProBtn("[ COPY WORKSPACE ONLY ]", 158, Color3.fromRGB(150, 255, 200), Color3.fromRGB(0, 30, 25), function()
         startCopy("workspace")
     end)
-
-    makeBtn("[ SAFE COPY (MINIMAL) ]", 209, CONFIG.WarnColor, Color3.fromRGB(50, 40, 0), function()
+    makeProBtn("[ SAFE COPY (MINIMAL) ]", 208, CONFIG.WarnColor, Color3.fromRGB(45, 38, 5), function()
         local oldDepth = CONFIG.MaxDepth
         CONFIG.MaxDepth = 3
         startCopy("workspace")
         CONFIG.MaxDepth = oldDepth
     end)
-
-    makeBtn("[ OPEN SAVE FOLDER ]", 261, CONFIG.AccentColor, Color3.fromRGB(0, 50, 80), function()
+    makeProBtn("[ OPEN SAVE FOLDER ]", 258, CONFIG.AccentColor, Color3.fromRGB(0, 30, 50), function()
         toast("INFO", "Files: " .. CONFIG.SaveFolder, CONFIG.AccentColor)
         if API.setclipboard then
             pcall(function() setclipboard(CONFIG.SaveFolder) end)
@@ -781,27 +939,42 @@ openMainUI = function()
         end
     end)
 
+    -- ========== STATUS BAR ==========
     local statusFrame = Instance.new("Frame")
-    statusFrame.Size = UDim2.new(1, 0, 0, 30)
-    statusFrame.Position = UDim2.new(0, 0, 1, -34)
-    statusFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    statusFrame.Size = UDim2.new(1, 0, 0, 32)
+    statusFrame.Position = UDim2.new(0, 0, 1, -36)
+    statusFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
     statusFrame.BorderSizePixel = 0
     statusFrame.Parent = mainPage
     Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 6)
 
     local statusDot = Instance.new("Frame")
     statusDot.Size = UDim2.new(0, 8, 0, 8)
-    statusDot.Position = UDim2.new(0, 10, 0.5, -4)
+    statusDot.Position = UDim2.new(0, 12, 0.5, -4)
     statusDot.BackgroundColor3 = CONFIG.ThemeColor
     statusDot.BorderSizePixel = 0
     statusDot.Parent = statusFrame
     Instance.new("UICorner", statusDot).CornerRadius = UDim.new(1, 0)
+    TweenService:Create(statusDot, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        BackgroundTransparency = 0.5,
+    }):Play()
+
+    local statusPrefix = Instance.new("TextLabel")
+    statusPrefix.Size = UDim2.new(0, 40, 1, 0)
+    statusPrefix.Position = UDim2.new(0, 26, 0, 0)
+    statusPrefix.BackgroundTransparency = 1
+    statusPrefix.Text = "SYS:"
+    statusPrefix.TextColor3 = CONFIG.AccentColor
+    statusPrefix.Font = CONFIG.Font
+    statusPrefix.TextSize = 10
+    statusPrefix.TextXAlignment = Enum.TextXAlignment.Left
+    statusPrefix.Parent = statusFrame
 
     local statusText = Instance.new("TextLabel")
-    statusText.Size = UDim2.new(1, -30, 1, 0)
-    statusText.Position = UDim2.new(0, 25, 0, 0)
+    statusText.Size = UDim2.new(1, -70, 1, 0)
+    statusText.Position = UDim2.new(0, 60, 0, 0)
     statusText.BackgroundTransparency = 1
-    statusText.Text = "Ready (Stealth Mode)_"
+    statusText.Text = "Ready_"
     statusText.TextColor3 = CONFIG.ThemeColor
     statusText.Font = CONFIG.Font
     statusText.TextSize = 11
@@ -811,11 +984,8 @@ openMainUI = function()
     refs.statusText = statusText
     refs.statusDot = statusDot
 
-    -- ============================================
-    -- TAB: CONSOLE
-    -- ============================================
+    -- ========== TAB: CONSOLE ==========
     local consolePage = tabPages["CONSOLE"]
-
     local consoleFrame = Instance.new("ScrollingFrame")
     consoleFrame.Size = UDim2.new(1, 0, 1, -40)
     consoleFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
@@ -825,15 +995,15 @@ openMainUI = function()
     consoleFrame.ScrollBarImageColor3 = CONFIG.ThemeColor
     consoleFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     consoleFrame.Parent = consolePage
+    Instance.new("UICorner", consoleFrame).CornerRadius = UDim.new(0, 6)
 
     local cl = Instance.new("UIListLayout")
     cl.Padding = UDim.new(0, 2)
     cl.SortOrder = Enum.SortOrder.LayoutOrder
     cl.Parent = consoleFrame
-
     local consolePad = Instance.new("UIPadding")
     consolePad.PaddingLeft = UDim.new(0, 8)
-    consolePad.PaddingTop = UDim.new(0, 4)
+    consolePad.PaddingTop = UDim.new(0, 6)
     consolePad.PaddingRight = UDim.new(0, 8)
     consolePad.Parent = consoleFrame
 
@@ -858,7 +1028,6 @@ openMainUI = function()
             consoleFrame.CanvasPosition = Vector2.new(0, math.huge)
         end)
     end
-
     refs.addConsole = addConsoleLine
 
     local clearBtn = Instance.new("TextButton")
@@ -873,6 +1042,7 @@ openMainUI = function()
     clearBtn.Parent = consolePage
     Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0, 6)
     clearBtn.MouseButton1Click:Connect(function()
+        playClick()
         for _, l in ipairs(consoleLines) do l:Destroy() end
         consoleLines = {}
     end)
@@ -889,6 +1059,7 @@ openMainUI = function()
     exportBtn.Parent = consolePage
     Instance.new("UICorner", exportBtn).CornerRadius = UDim.new(0, 6)
     exportBtn.MouseButton1Click:Connect(function()
+        playClick()
         if API.writefile then
             local txt = table.concat(LogBuffer, "\n")
             local fn = CONFIG.SaveFolder .. "/console_" .. os.date("%Y%m%d_%H%M%S") .. ".txt"
@@ -897,35 +1068,38 @@ openMainUI = function()
         end
     end)
 
-    -- ============================================
-    -- TAB: STATS
-    -- ============================================
+    -- ========== TAB: STATS ==========
     local statsPage = tabPages["STATS"]
-
     local statLabels = {}
     local statNames = {"FPS", "Ping", "Memory", "Instance Count", "Player Count", "AC Risk"}
     for i, name in ipairs(statNames) do
         local row = Instance.new("Frame")
-        row.Size = UDim2.new(1, 0, 0, 36)
-        row.Position = UDim2.new(0, 0, 0, (i-1) * 40)
-        row.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        row.Size = UDim2.new(1, 0, 0, 38)
+        row.Position = UDim2.new(0, 0, 0, (i-1) * 42)
+        row.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+        row.BackgroundTransparency = 0.2
         row.BorderSizePixel = 0
         row.Parent = statsPage
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+        local rowStroke = Instance.new("UIStroke")
+        rowStroke.Color = CONFIG.ThemeColor
+        rowStroke.Thickness = 1
+        rowStroke.Transparency = 0.85
+        rowStroke.Parent = row
 
         local lbl = Instance.new("TextLabel")
-        lbl.Size = UDim2.new(0.5, -10, 1, 0)
-        lbl.Position = UDim2.new(0, 10, 0, 0)
+        lbl.Size = UDim2.new(0.5, -15, 1, 0)
+        lbl.Position = UDim2.new(0, 15, 0, 0)
         lbl.BackgroundTransparency = 1
-        lbl.Text = name
-        lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+        lbl.Text = "> " .. name
+        lbl.TextColor3 = Color3.fromRGB(150, 150, 160)
         lbl.Font = CONFIG.Font
         lbl.TextSize = 11
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = row
 
         local val = Instance.new("TextLabel")
-        val.Size = UDim2.new(0.5, -10, 1, 0)
+        val.Size = UDim2.new(0.5, -15, 1, 0)
         val.Position = UDim2.new(0.5, 0, 0, 0)
         val.BackgroundTransparency = 1
         val.Text = "---"
@@ -934,10 +1108,8 @@ openMainUI = function()
         val.TextSize = 12
         val.TextXAlignment = Enum.TextXAlignment.Right
         val.Parent = row
-
         statLabels[name] = val
     end
-
     statLabels["AC Risk"].Text = AC_DETECTED.risk
     statLabels["AC Risk"].TextColor3 = AC_DETECTED.detected and CONFIG.DangerColor or CONFIG.ThemeColor
 
@@ -964,26 +1136,23 @@ openMainUI = function()
         end
     end)
 
-    -- ============================================
-    -- TAB: SETTINGS
-    -- ============================================
+    -- ========== TAB: SETTINGS ==========
     local settingsPage = tabPages["SETTINGS"]
-
     local function makeSetting(name, y, initial, onChange)
         local row = Instance.new("Frame")
-        row.Size = UDim2.new(1, 0, 0, 38)
+        row.Size = UDim2.new(1, 0, 0, 40)
         row.Position = UDim2.new(0, 0, 0, y)
-        row.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+        row.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+        row.BackgroundTransparency = 0.2
         row.BorderSizePixel = 0
         row.Parent = settingsPage
         Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
-
         local lbl = Instance.new("TextLabel")
-        lbl.Size = UDim2.new(0.6, -10, 1, 0)
-        lbl.Position = UDim2.new(0, 10, 0, 0)
+        lbl.Size = UDim2.new(0.65, -15, 1, 0)
+        lbl.Position = UDim2.new(0, 15, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = name
-        lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+        lbl.TextColor3 = Color3.fromRGB(180, 180, 190)
         lbl.Font = CONFIG.Font
         lbl.TextSize = 11
         lbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -991,8 +1160,8 @@ openMainUI = function()
 
         local toggle = Instance.new("TextButton")
         toggle.Size = UDim2.new(0, 60, 0, 24)
-        toggle.Position = UDim2.new(1, -70, 0.5, -12)
-        toggle.BackgroundColor3 = initial and Color3.fromRGB(0, 80, 60) or Color3.fromRGB(50, 20, 20)
+        toggle.Position = UDim2.new(1, -75, 0.5, -12)
+        toggle.BackgroundColor3 = initial and Color3.fromRGB(0, 60, 45) or Color3.fromRGB(45, 15, 15)
         toggle.Text = initial and "ON" or "OFF"
         toggle.TextColor3 = initial and CONFIG.ThemeColor or CONFIG.DangerColor
         toggle.Font = CONFIG.Font
@@ -1000,43 +1169,42 @@ openMainUI = function()
         toggle.BorderSizePixel = 0
         toggle.Parent = row
         Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 6)
+        local tStroke = Instance.new("UIStroke")
+        tStroke.Color = initial and CONFIG.ThemeColor or CONFIG.DangerColor
+        tStroke.Thickness = 1
+        tStroke.Transparency = 0.4
+        tStroke.Parent = toggle
 
         local state = initial
         toggle.MouseButton1Click:Connect(function()
+            playClick()
             state = not state
-            toggle.BackgroundColor3 = state and Color3.fromRGB(0, 80, 60) or Color3.fromRGB(50, 20, 20)
+            toggle.BackgroundColor3 = state and Color3.fromRGB(0, 60, 45) or Color3.fromRGB(45, 15, 15)
             toggle.TextColor3 = state and CONFIG.ThemeColor or CONFIG.DangerColor
+            tStroke.Color = state and CONFIG.ThemeColor or CONFIG.DangerColor
             toggle.Text = state and "ON" or "OFF"
             onChange(state)
         end)
-        return toggle
     end
 
-    makeSetting("Safe Mode", 0, CONFIG.SafeMode, function(v)
-        CONFIG.SafeMode = v
-    end)
-
-    makeSetting("Allow Streaming Bypass", 42, CONFIG.AllowStreamingBypass, function(v)
+    makeSetting("Safe Mode", 0, CONFIG.SafeMode, function(v) CONFIG.SafeMode = v end)
+    makeSetting("Allow Streaming Bypass", 44, CONFIG.AllowStreamingBypass, function(v)
         if v and AC_DETECTED.detected then
             toast("WARNING", AC_DETECTED.name .. " detected! Risky!", CONFIG.DangerColor, 4)
         end
         CONFIG.AllowStreamingBypass = v
     end)
-
-    makeSetting("Matrix Background", 84, MATRIX_ENABLED, function(v)
+    makeSetting("Matrix Background", 88, MATRIX_ENABLED, function(v)
         MATRIX_ENABLED = v
         matrixBg.Visible = v
     end)
-
-    makeSetting("Log to File", 126, CONFIG.LogToFile, function(v)
-        CONFIG.LogToFile = v
-    end)
+    makeSetting("Log to File", 132, CONFIG.LogToFile, function(v) CONFIG.LogToFile = v end)
 
     local warnRow = Instance.new("TextLabel")
-    warnRow.Size = UDim2.new(1, 0, 0, 50)
-    warnRow.Position = UDim2.new(0, 0, 0, 172)
+    warnRow.Size = UDim2.new(1, 0, 0, 45)
+    warnRow.Position = UDim2.new(0, 0, 0, 180)
     warnRow.BackgroundTransparency = 1
-    warnRow.Text = "⚠ Stealth mode: no function hooks\n⚠ Skip streaming bypass di server AC\n⚠ Gunakan SAFE COPY kalau ragu"
+    warnRow.Text = "⚠ Stealth: no function hooks\n⚠ Gunakan SAFE COPY di server AC"
     warnRow.TextColor3 = CONFIG.WarnColor
     warnRow.Font = CONFIG.Font
     warnRow.TextSize = 9
@@ -1045,19 +1213,20 @@ openMainUI = function()
     warnRow.Parent = settingsPage
 
     local depthRow = Instance.new("Frame")
-    depthRow.Size = UDim2.new(1, 0, 0, 50)
-    depthRow.Position = UDim2.new(0, 0, 0, 230)
-    depthRow.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    depthRow.Size = UDim2.new(1, 0, 0, 52)
+    depthRow.Position = UDim2.new(0, 0, 0, 232)
+    depthRow.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    depthRow.BackgroundTransparency = 0.2
     depthRow.BorderSizePixel = 0
     depthRow.Parent = settingsPage
     Instance.new("UICorner", depthRow).CornerRadius = UDim.new(0, 6)
 
     local depthLbl = Instance.new("TextLabel")
     depthLbl.Size = UDim2.new(1, -20, 0, 18)
-    depthLbl.Position = UDim2.new(0, 10, 0, 5)
+    depthLbl.Position = UDim2.new(0, 12, 0, 6)
     depthLbl.BackgroundTransparency = 1
     depthLbl.Text = "Max Depth: " .. CONFIG.MaxDepth
-    depthLbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+    depthLbl.TextColor3 = Color3.fromRGB(180, 180, 190)
     depthLbl.Font = CONFIG.Font
     depthLbl.TextSize = 11
     depthLbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -1065,7 +1234,7 @@ openMainUI = function()
 
     local depthBar = Instance.new("Frame")
     depthBar.Size = UDim2.new(0.9, 0, 0, 6)
-    depthBar.Position = UDim2.new(0.05, 0, 0, 32)
+    depthBar.Position = UDim2.new(0.05, 0, 0, 34)
     depthBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     depthBar.BorderSizePixel = 0
     depthBar.Parent = depthRow
@@ -1079,8 +1248,8 @@ openMainUI = function()
     Instance.new("UICorner", depthFill).CornerRadius = UDim.new(1, 0)
 
     local depthBtn = Instance.new("TextButton")
-    depthBtn.Size = UDim2.new(1, -20, 0, 14)
-    depthBtn.Position = UDim2.new(0, 10, 0, 22)
+    depthBtn.Size = UDim2.new(1, -20, 0, 20)
+    depthBtn.Position = UDim2.new(0, 10, 0, 24)
     depthBtn.BackgroundTransparency = 1
     depthBtn.Text = ""
     depthBtn.Parent = depthRow
@@ -1094,6 +1263,7 @@ openMainUI = function()
         depthLbl.Text = "Max Depth: " .. CONFIG.MaxDepth
     end)
 
+    -- ========== SHORTCUTS ==========
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
         if input.KeyCode == Enum.KeyCode.H and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
@@ -1109,18 +1279,15 @@ openMainUI = function()
     initToasts(mainGui)
 
     window.BackgroundTransparency = 1
-    TweenService:Create(window, TweenInfo.new(0.3), {
-        BackgroundTransparency = 0.05
-    }):Play()
+    TweenService:Create(window, TweenInfo.new(0.3), { BackgroundTransparency = 0.05 }):Play()
 
     toast("READY (STEALTH)", "Executed at " .. os.date("%H:%M:%S"), CONFIG.ThemeColor)
-    addConsoleLine(string.format("[%s] [INFO] v3.2 Stealth initialized", os.date("%H:%M:%S")))
+    addConsoleLine(string.format("[%s] [INFO] v3.3 Polished initialized", os.date("%H:%M:%S")))
     addConsoleLine(string.format("[%s] [INFO] Executor: %s", os.date("%H:%M:%S"), executorName))
-    addConsoleLine(string.format("[%s] [INFO] Anti-Cheat: %s (%s)", 
+    addConsoleLine(string.format("[%s] [INFO] Anti-Cheat: %s (%s)",
         os.date("%H:%M:%S"), AC_DETECTED.name, AC_DETECTED.risk))
-    
     if AC_DETECTED.detected then
-        addConsoleLine(string.format("[%s] [WARN] Use SAFE COPY in this server", 
+        addConsoleLine(string.format("[%s] [WARN] Use SAFE COPY in this server",
             os.date("%H:%M:%S")), CONFIG.WarnColor)
     end
 
@@ -1184,15 +1351,8 @@ local function dumpInstance(inst, depth, maxDepth, counter)
     depth = depth or 0
     maxDepth = maxDepth or CONFIG.MaxDepth
     if depth > maxDepth then return nil end
-
     counter.n = counter.n + 1
-
-    local data = {
-        ClassName = inst.ClassName,
-        Name = inst.Name,
-        Children = {}
-    }
-
+    local data = { ClassName = inst.ClassName, Name = inst.Name, Children = {} }
     local propsToSave = {}
     pcall(function()
         for _, prop in ipairs({"Position","Size","CFrame","Color","BrickColor",
@@ -1208,18 +1368,15 @@ local function dumpInstance(inst, depth, maxDepth, counter)
         end
     end)
     data.Properties = propsToSave
-
     for _, child in ipairs(inst:GetChildren()) do
         local ok, childData = pcall(dumpInstance, child, depth + 1, maxDepth, counter)
-        if ok and childData then
-            table.insert(data.Children, childData)
-        end
+        if ok and childData then table.insert(data.Children, childData) end
     end
     return data
 end
 
 -- ============================================
--- MAIN COPY FUNCTION
+-- COPY FUNCTION
 -- ============================================
 function startCopy(mode)
     if SAVE_IN_PROGRESS then
@@ -1227,29 +1384,25 @@ function startCopy(mode)
         return
     end
     SAVE_IN_PROGRESS = true
-
     local startTime = os.clock()
     updateStatus("Initializing copy...", CONFIG.WarnColor)
     log("info", "Copy started: " .. mode)
 
     task.spawn(function()
         task.wait(0.3)
-
         if not API.writefile then
             updateStatus("ERROR: writefile not supported", CONFIG.DangerColor)
             toast("ERROR", "Executor doesn't support writefile()", CONFIG.DangerColor, 4)
             SAVE_IN_PROGRESS = false
             return
         end
-
         if API.makefolder then pcall(function() makefolder(CONFIG.SaveFolder) end) end
 
         local forceJson = false
         if AC_DETECTED.detected and (AC_DETECTED.risk == "HIGH" or AC_DETECTED.risk == "EXTREME") then
             forceJson = true
-            updateStatus("AC detected, using JSON dump only", CONFIG.WarnColor)
+            updateStatus("AC detected, using JSON dump", CONFIG.WarnColor)
         end
-
         if CONFIG.SafeMode then
             updateStatus("SAFE mode active", CONFIG.WarnColor)
         end
@@ -1257,7 +1410,6 @@ function startCopy(mode)
         if not forceJson and not CONFIG.SafeMode then
             updateStatus("Loading save engine...", CONFIG.WarnColor)
             local si = getSaveInstance()
-
             if si then
                 local succeeded = false
                 for attempt = 1, 2 do
@@ -1274,7 +1426,6 @@ function startCopy(mode)
                     if ok then succeeded = true; break end
                     task.wait(1)
                 end
-
                 if succeeded then
                     local elapsed = os.clock() - startTime
                     updateStatus(string.format("Saved! (%.2fs)", elapsed), CONFIG.ThemeColor)
@@ -1285,11 +1436,10 @@ function startCopy(mode)
                 end
             end
         else
-            updateStatus("Skip saveinstance (safe mode)", CONFIG.WarnColor)
+            updateStatus("Skip saveinstance (safe)", CONFIG.WarnColor)
         end
 
         updateStatus("Running JSON dump...", CONFIG.WarnColor)
-
         local services
         if mode == "all" then
             services = {
@@ -1305,7 +1455,6 @@ function startCopy(mode)
 
         local result = {}
         local counter = {n = 0}
-
         for i, svc in ipairs(services) do
             updateStatus(string.format("Dumping %s (%d/%d)...", svc.Name, i, #services), CONFIG.WarnColor)
             local ok, data = pcall(dumpInstance, svc, 0, CONFIG.MaxDepth, counter)
@@ -1315,11 +1464,9 @@ function startCopy(mode)
 
         updateStatus(string.format("Collected %d instances", counter.n), CONFIG.WarnColor)
         task.wait(0.2)
-
         updateStatus("Encoding JSON...", CONFIG.WarnColor)
         local jsonData = HttpService:JSONEncode(result)
         local fileName = CONFIG.SaveFolder .. "/map_" .. mode .. "_" .. os.date("%Y%m%d_%H%M%S") .. ".json"
-
         local ok, err = pcall(function() writefile(fileName, jsonData) end)
 
         if ok then
@@ -1332,7 +1479,6 @@ function startCopy(mode)
             updateStatus("FAILED: " .. tostring(err), CONFIG.DangerColor)
             toast("ERROR", "Save failed", CONFIG.DangerColor, 4)
         end
-
         SAVE_IN_PROGRESS = false
     end)
 end
@@ -1344,7 +1490,7 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "MAP COPIER v3.2",
+        Title = "MAP COPIER v3.3",
         Text = "Initializing stealth mode...",
         Duration = 2,
     })
@@ -1353,7 +1499,6 @@ end)
 task.wait(0.3)
 detectAntiCheat()
 log("info", string.format("AC Detection: %s (%s)", AC_DETECTED.name, AC_DETECTED.risk))
-
 applyStealth()
 task.wait(0.2)
 runLoading()
